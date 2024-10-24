@@ -14,9 +14,9 @@ const HomePage = () => {
       <FeedView />
       <TouchableOpacity
         style={styles.button}
-        onPress={() => router.push('./friends')}
+        onPress={() => router.push('./profile')}
       >
-        <Text style={styles.buttonText}>Go to Friends Page</Text>
+        <Text style={styles.buttonText}>Go to Profile</Text>
       </TouchableOpacity>
 
       <TouchableOpacity

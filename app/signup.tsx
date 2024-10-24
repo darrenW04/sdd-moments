@@ -7,6 +7,9 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
+import { useRouter } from 'expo-router';
+
+const router = useRouter();
 
 const SignupPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -44,6 +47,7 @@ const SignupPage: React.FC = () => {
     if (valid) {
       // Simulate signup process
       Alert.alert("Signup Successful", `Welcome ${email}!`);
+      router.push('./home');
     } else {
       Alert.alert("Signup Failed", "Please fix the errors and try again");
     }

@@ -7,6 +7,9 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
+import { useRouter } from 'expo-router';
+
+const router = useRouter();
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -33,6 +36,7 @@ const LoginPage: React.FC = () => {
     if (valid) {
       // Simulate login process
       Alert.alert("Login Successful", `Welcome ${email}!`);
+      router.push('./home');
     } else {
       Alert.alert("Login Failed", "Please fill in all required fields");
     }

@@ -9,13 +9,14 @@ import {
 } from "react-native";
 import { useRouter } from 'expo-router';
 
-const router = useRouter();
 
-const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
+const LoginPage = () => {
+  const router = useRouter();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   const handleLogin = () => {
     // Reset error messages
@@ -45,34 +46,25 @@ const LoginPage: React.FC = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
-
-      <Text style={styles.label}>Email</Text>
       <TextInput
         style={styles.input}
-        placeholder="Email"
-        keyboardType="email-address"
+        placeholder="username"
         value={email}
         onChangeText={setEmail}
-        autoCapitalize="none"
       />
-      {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
-
-      <Text style={styles.label}>Password</Text>
       <TextInput
         style={styles.input}
-        placeholder="Password"
-        secureTextEntry
+        placeholder="password"
         value={password}
+        secureTextEntry
         onChangeText={setPassword}
-        autoCapitalize="none"
       />
-      {passwordError ? (
-        <Text style={styles.errorText}>{passwordError}</Text>
-      ) : null}
-
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
+        <Text style={styles.buttonText}>Sign Up</Text>
       </TouchableOpacity>
+      <Text style={styles.text}>
+        Don't have an account? <Text style={styles.link}>Sign Up</Text>
+      </Text>
     </View>
   );
 };
@@ -80,47 +72,41 @@ const LoginPage: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 16,
-    backgroundColor: "#f8f8f8",
+    backgroundColor: '#000',  // Background color based on the design
   },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 5,
-    fontWeight: "bold",
+    fontSize: 32,
+    color: '#fff',  // White text color
+    marginBottom: 24,
   },
   input: {
-    height: 50,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    marginBottom: 10,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    fontSize: 16,
-  },
-  errorText: {
-    color: "red",
-    fontSize: 14,
-    marginBottom: 10,
+    width: '80%',
+    padding: 10,
+    backgroundColor: '#ccc',  // Light input background
+    marginBottom: 16,
+    borderRadius: 8,
   },
   button: {
-    backgroundColor: "#4CAF50",
-    height: 50,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 5,
-    marginTop: 10,
+    width: '80%',
+    padding: 15,
+    backgroundColor: '#555',  // Button background
+    alignItems: 'center',
+    borderRadius: 8,
   },
   buttonText: {
-    color: "#fff",
+    color: '#fff',  // Button text color
     fontSize: 18,
-    fontWeight: "bold",
+  },
+  text: {
+    color: '#fff',
+    marginTop: 16,
+  },
+  link: {
+    color: '#00f',  // Link color
+    textDecorationLine: 'underline',
   },
 });
 

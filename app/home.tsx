@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import FeedView from './feed';
 
 const HomePage = () => {
   const router = useRouter();
@@ -9,6 +10,8 @@ const HomePage = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Home Page</Text>
 
+      {/* Feed */}
+      <FeedView />
       <TouchableOpacity
         style={styles.button}
         onPress={() => router.push('./friends')}

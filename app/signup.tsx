@@ -9,9 +9,9 @@ import {
 } from "react-native";
 import { useRouter } from 'expo-router';
 
-const router = useRouter();
-
 const SignupPage: React.FC = () => {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

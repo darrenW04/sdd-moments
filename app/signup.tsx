@@ -7,7 +7,7 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
-import { useRouter } from 'expo-router';
+import { useRouter } from "expo-router";
 
 const SignupPage: React.FC = () => {
   const router = useRouter();
@@ -47,7 +47,7 @@ const SignupPage: React.FC = () => {
     if (valid) {
       // Simulate signup process
       Alert.alert("Signup Successful", `Welcome ${email}!`);
-      router.push('./home');
+      router.push("./home");
     } else {
       Alert.alert("Signup Failed", "Please fix the errors and try again");
     }
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 16,
-    backgroundColor: "#f8f8f8",
+    backgroundColor: "#ffffff",
   },
   title: {
     fontSize: 28,

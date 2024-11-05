@@ -1,44 +1,55 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   Image,
-  StyleSheet,
   TouchableOpacity,
-  ScrollView,
+  StyleSheet,
   ActivityIndicator,
 } from "react-native";
+import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { FontAwesome } from "@expo/vector-icons"; // For back icon
 
-type Profile = {
-  avatar: string;
-  name: string;
-  bio: string;
+type UserProfile = {
+  username: string;
   email: string;
-  location: string;
-  friendsCount: number;
+  profile_picture: string;
+  created_at: string;
+  friend_count: number;
 };
 
 const ProfilePage = () => {
-  const router = useRouter();
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter(); // Use router for navigation
 
   useEffect(() => {
-    const loadProfileData = async () => {
+    const fetchUserProfile = async () => {
       try {
-        const storedProfile = await AsyncStorage.getItem("@profile_data");
-        if (storedProfile) {
-          setProfile(JSON.parse(storedProfile));
+        const currentUserId = await AsyncStorage.getItem("currentUserId");
+        if (!currentUserId) {
+          console.error("Current user ID not found");
+          return;
+        }
+
+        const response = await axios.get(
+          `http://192.168.6.61:3000/api/users/${currentUserId}`
+        );
+
+        if (response.data) {
+          setUserProfile(response.data);
         }
       } catch (error) {
-        console.error("Error loading profile data from AsyncStorage:", error);
+        console.error("Error fetching user profile:", error);
       } finally {
         setLoading(false);
       }
     };
-    loadProfileData();
+
+    fetchUserProfile();
   }, []);
 
   if (loading) {
@@ -49,165 +60,143 @@ const ProfilePage = () => {
     );
   }
 
-  // Use default values if profile is null
-  const displayedProfile = profile || {
-    avatar: "https://via.placeholder.com/150",
-    name: "John Doe",
-    bio: "This is a sample bio. Update your profile to add more information about yourself.",
-    email: "example@example.com",
-    location: "Unknown",
-    friendsCount: 0,
-  };
+  if (!userProfile) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>Error loading profile.</Text>
+      </View>
+    );
+  }
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <View style={styles.container}>
-        {/* Profile Image */}
+    <View style={styles.container}>
+      <SafeAreaView edges={["top"]} />
+      {/* Back Button */}
+      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <FontAwesome name="arrow-left" size={24} color="#fff" />
+      </TouchableOpacity>
+
+      {/* Centered Profile Section */}
+      <View style={styles.profileSection}>
         <Image
-          source={{ uri: displayedProfile.avatar }}
+          source={{
+            uri: userProfile.profile_picture || "https://via.placeholder.com/150",
+          }}
           style={styles.avatar}
         />
 
-        {/* User Name and Bio */}
-        <Text style={styles.name}>{displayedProfile.name}</Text>
-        <Text style={styles.bio}>{displayedProfile.bio}</Text>
-
-        {/* Additional Info */}
         <View style={styles.infoContainer}>
-          <Text style={styles.infoTitle}>Email:</Text>
-          <Text style={styles.infoText}>{displayedProfile.email}</Text>
-        </View>
-        <View style={styles.infoContainer}>
-          <Text style={styles.infoTitle}>Location:</Text>
-          <Text style={styles.infoText}>{displayedProfile.location}</Text>
+          <Text style={styles.username}>{userProfile.username}</Text>
+          <Text style={styles.email}>{`Email: ${userProfile.email}`}</Text>
+          <Text style={styles.info}>{`Friends: ${userProfile.friend_count}`}</Text>
+          <Text style={styles.info}>
+            {`Account Created: ${new Date(userProfile.created_at).toLocaleString()}`}
+          </Text>
         </View>
 
-        {/* Edit Profile Button */}
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => router.push("/editProfile")}
-        >
-          <Text style={styles.editButtonText}>Edit Profile</Text>
-        </TouchableOpacity>
+        {/* Buttons */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => router.push("/editProfile")}
+          >
+            <Text style={styles.buttonText}>Edit Profile</Text>
+          </TouchableOpacity>
 
-        {/* Friends Button with Counter */}
-        <View style={styles.actionsContainer}>
           <TouchableOpacity
             style={styles.friendButton}
             onPress={() => router.push("/friends")}
           >
-            <Text style={styles.friendButtonText}>Friends</Text>
-            {displayedProfile.friendsCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>
-                  {displayedProfile.friendsCount}
-                </Text>
-              </View>
-            )}
+            <Text style={styles.buttonText}>Friends</Text>
           </TouchableOpacity>
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: "center",
-    paddingVertical: 20,
-    backgroundColor: "#f8f9fa",
+  container: {
+    flex: 1,
+    backgroundColor: "#f0f0f0",
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-  container: {
+  backButton: {
+    position: "absolute",
+    top: 65,
+    left: 10,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#007bff",
+    justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    zIndex: 1,
+  },
+  profileSection: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    marginTop: -100, 
   },
   avatar: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: "#cccccc",
     marginBottom: 20,
-  },
-  name: {
-    fontSize: 26,
-    fontWeight: "bold",
-    marginBottom: 8,
-    color: "#333",
-  },
-  bio: {
-    fontSize: 16,
-    color: "#666",
-    textAlign: "center",
-    paddingHorizontal: 20,
-    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: "#007bff",
   },
   infoContainer: {
+    alignItems: "center",
+    marginBottom: 30,
+  },
+  username: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 15,
+  },
+  email: {
+    fontSize: 18,
+    color: "#333",
+    marginBottom: 15,
+  },
+  info: {
+    fontSize: 16,
+    color: "#666",
+    marginBottom: 10,
+  },
+  buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     width: "80%",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-  },
-  infoTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#555",
-  },
-  infoText: {
-    fontSize: 16,
-    color: "#777",
   },
   editButton: {
-    marginTop: 20,
+    backgroundColor: "#4CAF50",
     paddingVertical: 12,
-    paddingHorizontal: 40,
-    backgroundColor: "#007bff",
-    borderRadius: 8,
-  },
-  editButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  actionsContainer: {
-    flexDirection: "row",
-    marginTop: 30,
-    justifyContent: "space-around",
-    width: "100%",
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginRight: 10,
   },
   friendButton: {
+    backgroundColor: "#007bff",
     paddingVertical: 12,
-    paddingHorizontal: 30,
-    backgroundColor: "#6c757d",
-    borderRadius: 8,
-    position: "relative",
+    paddingHorizontal: 20,
+    borderRadius: 10,
   },
-  friendButtonText: {
+  buttonText: {
     color: "#fff",
     fontSize: 16,
+    fontWeight: "600",
   },
-  badge: {
-    position: "absolute",
-    top: -6,
-    right: -6,
-    backgroundColor: "#FF6347",
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  badgeText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "bold",
+  errorText: {
+    fontSize: 18,
+    color: "red",
   },
 });
 

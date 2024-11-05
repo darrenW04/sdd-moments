@@ -10,6 +10,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { FontAwesome } from "@expo/vector-icons"; // For the back icon
 
 const EditProfile = () => {
   const router = useRouter();
@@ -50,6 +51,11 @@ const EditProfile = () => {
   return (
     <View style={styles.container}>
       <SafeAreaView edges={["top"]} />
+      {/* Back Button */}
+      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <FontAwesome name="arrow-left" size={24} color="#fff" />
+      </TouchableOpacity>
+
       <Text style={styles.title}>Edit Profile</Text>
 
       {/* Avatar URL */}
@@ -112,6 +118,18 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: "#f8f9fa",
+  },
+  backButton: {
+    position: "absolute",
+    top: 65,
+    left: 10,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#007bff",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1,
   },
   title: {
     fontSize: 24,

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,50 +8,71 @@ import {
   TextInput,
   TouchableOpacity,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native"; // Import useNavigation
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import { FontAwesome } from "@expo/vector-icons"; // For back icon
+
+type Friend = {
+  userId: string;
+  name: string;
+  avatar: string;
+  status: string;
+};
 
 const FriendsPage = () => {
-  const navigation = useNavigation(); // Hook for navigation
-
-  // Example friends list
-  const [friends, setFriends] = useState([
-    {
-      id: "1",
-      name: "Alice",
-      avatar: "https://via.placeholder.com/100",
-      bio: "Loves adventures 🌍",
-    },
-    {
-      id: "2",
-      name: "Bob",
-      avatar: "https://via.placeholder.com/100",
-      bio: "Coder and cat lover 🐱",
-    },
-    {
-      id: "3",
-      name: "Charlie",
-      avatar: "https://via.placeholder.com/100",
-      bio: "Sports enthusiast 🏀",
-    },
-  ]);
-
+  const [friends, setFriends] = useState<Friend[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
 
-  // Filter friends based on the search query
+  useEffect(() => {
+    const fetchFriendsDetails = async () => {
+      try {
+        const currentUserId = await AsyncStorage.getItem("currentUserId");
+        if (!currentUserId) {
+          console.error("Current user ID not found");
+          return;
+        }
+
+        const response = await axios.get(
+          `http://192.168.6.61:3000/api/users/${currentUserId}/friends-details`
+        );
+
+        if (response.data) {
+          setFriends(response.data.friends);
+        }
+      } catch (error) {
+        console.error("Error fetching friends details:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFriendsDetails();
+  }, []);
+
   const filteredFriends = friends.filter((friend) =>
     friend.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Function to view friend's profile
-  const viewProfile = (friend) => {
-    // Navigate to Profile Page with friend data
-    navigation.navigate("Profile", { friend });
-  };
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <SafeAreaView edges={["top"]} />
+      {/* Back Button */}
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <FontAwesome name="arrow-left" size={24} color="#fff" />
+      </TouchableOpacity>
+
       {/* Search Bar */}
       <TextInput
         style={styles.searchInput}
@@ -63,15 +84,20 @@ const FriendsPage = () => {
       {/* Friends List */}
       <FlatList
         data={filteredFriends}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.userId}
         renderItem={({ item }) => (
           <View style={styles.friendItem}>
-            <Image source={{ uri: item.avatar }} style={styles.avatar} />
-            <Text style={styles.friendName}>{item.name}</Text>
-            <TouchableOpacity
-              style={styles.profileButton}
-              onPress={() => viewProfile(item)}
-            >
+            <Image
+              source={{
+                uri: item.avatar || "https://via.placeholder.com/100", // Replace with your general profile icon URL if needed
+              }}
+              style={styles.avatar}
+            />
+            <View style={styles.friendDetails}>
+              <Text style={styles.friendName}>{item.name}</Text>
+              <Text style={styles.friendStatus}>{`Status: ${item.status}`}</Text>
+            </View>
+            <TouchableOpacity style={styles.profileButton}>
               <Text style={styles.profileButtonText}>View Profile</Text>
             </TouchableOpacity>
           </View>
@@ -87,6 +113,18 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#f0f0f0",
   },
+  backButton: {
+    position: "absolute",
+    top: 65,
+    left: 10,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#007bff",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1,
+  },
   searchInput: {
     height: 40,
     borderWidth: 1,
@@ -94,6 +132,7 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     borderRadius: 5,
     marginBottom: 20,
+    marginTop: 70, // Adjusted to prevent overlap with the back button
   },
   friendItem: {
     flexDirection: "row",
@@ -103,6 +142,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 5,
   },
+  friendDetails: {
+    flex: 1,
+  },
   avatar: {
     width: 50,
     height: 50,
@@ -111,16 +153,20 @@ const styles = StyleSheet.create({
   },
   friendName: {
     fontSize: 18,
-    flex: 1,
+    fontWeight: "bold",
+  },
+  friendStatus: {
+    fontSize: 14,
+    color: "#666",
   },
   profileButton: {
-    padding: 10,
+    padding: 8,
     backgroundColor: "#007bff",
     borderRadius: 5,
   },
   profileButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 14,
   },
 });
 

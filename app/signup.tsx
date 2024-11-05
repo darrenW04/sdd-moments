@@ -7,11 +7,11 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
-import { useRouter } from 'expo-router';
+import { useRouter } from "expo-router";
+import axios from "axios";
 
 const SignupPage: React.FC = () => {
   const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -19,13 +19,11 @@ const SignupPage: React.FC = () => {
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
-  const handleSignup = () => {
-    // Reset error messages
+  const handleSignup = async () => {
     setEmailError("");
     setPasswordError("");
     setConfirmPasswordError("");
 
-    // Simple validation
     let valid = true;
     if (!email) {
       setEmailError("Email is required");
@@ -35,28 +33,37 @@ const SignupPage: React.FC = () => {
       setPasswordError("Password is required");
       valid = false;
     }
-    if (!confirmPassword) {
-      setConfirmPasswordError("Confirm Password is required");
-      valid = false;
-    }
     if (password && confirmPassword && password !== confirmPassword) {
       setConfirmPasswordError("Passwords do not match");
       valid = false;
     }
 
     if (valid) {
-      // Simulate signup process
-      Alert.alert("Signup Successful", `Welcome ${email}!`);
-      router.push('./home');
+      try {
+        const response = await axios.post('http://192.168.6.61:3000/api/signup', {
+          email,
+          password,
+        });
+        console.log('Signup response:', response.data);
+        Alert.alert("Signup Successful", `Welcome ${email}!`);
+        router.push("./home");
+      } catch (err: any) {
+        console.error('Signup error:', err);
+        if (axios.isAxiosError(err) && err.response) {
+          const errorMessage = err.response.data?.message || "An unexpected error occurred";
+          Alert.alert("Signup Failed", errorMessage);
+        } else {
+          Alert.alert("Signup Failed", "Network Error");
+        }
+      }
     } else {
-      Alert.alert("Signup Failed", "Please fix the errors and try again");
+      Alert.alert("Signup Failed", "Please fill in all required fields");
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Signup</Text>
-
       <Text style={styles.label}>Email</Text>
       <TextInput
         style={styles.input}
@@ -77,9 +84,7 @@ const SignupPage: React.FC = () => {
         onChangeText={setPassword}
         autoCapitalize="none"
       />
-      {passwordError ? (
-        <Text style={styles.errorText}>{passwordError}</Text>
-      ) : null}
+      {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
 
       <Text style={styles.label}>Confirm Password</Text>
       <TextInput
@@ -106,7 +111,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 16,
-    backgroundColor: "#f8f8f8",
+    backgroundColor: "#ffffff",
   },
   title: {
     fontSize: 28,

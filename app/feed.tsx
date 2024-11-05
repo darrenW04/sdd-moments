@@ -1,34 +1,120 @@
-import React from 'react';
-import { View, Text, FlatList, StyleSheet, Image, ListRenderItem } from 'react-native';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  Dimensions,
+} from "react-native";
+import { WebView } from "react-native-webview";
+import { FontAwesome } from "@expo/vector-icons"; // Use '@expo/vector-icons' for Expo projects
+import axios from "axios";
 
-type Post = {
-  id: string;
-  user: string;
-  caption: string;
-  likes: number;
-  imageUrl: string;
+const screenWidth = Dimensions.get("window").width;
+
+type Video = {
+  _id: string;
+  videoId: string;
+  userId: string;
+  videoUrl: string;
+  title: string;
+  description: string;
+  isPublic: boolean;
+  uploadTime: string;
+  viewCount: number;
+  liked: boolean; // This property can be added to manage local state
+  likes: number; // Placeholder for like count, if needed
 };
 
 const FeedView = () => {
-  const posts: Post[] = [
-    { id: '1', user: 'user_name', caption: 'This is a test post', likes: 1234, imageUrl: 'https://via.placeholder.com/200' },
-    { id: '2', user: 'another_user', caption: 'Another post', likes: 450, imageUrl: 'https://via.placeholder.com/200' },
-    // Add more posts here
-  ];
+  const [videos, setVideos] = useState<Video[]>([]);
 
-  const renderItem: ListRenderItem<Post> = ({ item }) => (
+  useEffect(() => {
+    // Fetch videos from the API
+    const fetchVideos = async () => {
+      try {
+        const response = await axios.get("http://192.168.6.61:3000/api/videos"); // Ensure this matches your server's IP and port
+        const fetchedVideos = response.data.map((video: Video) => ({
+          ...video,
+          liked: false, // Default to not liked
+          likes: video.viewCount, // Use view count as a placeholder for likes
+        }));
+        setVideos(fetchedVideos);
+      } catch (error) {
+        console.error("Error fetching videos:", error);
+      }
+    };
+
+    fetchVideos();
+  }, []);
+
+  // Function to handle like button press
+  const handleLike = (videoId: string) => {
+    setVideos((prevVideos) =>
+      prevVideos.map((video) => {
+        if (video._id === videoId) {
+          const isLiked = !video.liked;
+          return {
+            ...video,
+            likes: isLiked ? video.likes + 1 : video.likes - 1,
+            liked: isLiked,
+          };
+        }
+        return video;
+      })
+    );
+
+    updateLikesOnServer(videoId);
+  };
+
+  // Placeholder for the PUT request to update likes
+  const updateLikesOnServer = async (videoId: string) => {
+    // Implement the PUT request logic here
+    console.log(`Updating likes on server for video ID: ${videoId}`);
+  };
+
+  const renderItem = ({ item }: { item: Video }) => (
     <View style={styles.postContainer}>
-      <Text style={styles.username}>{item.user}</Text>
-      <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
-      <Text style={styles.caption}>{item.caption}</Text>
-      <Text style={styles.likes}>Likes: {item.likes}</Text>
+      {/* User Info */}
+      <Text style={styles.username}>{item.userId}</Text>
+
+      {/* Video */}
+      <View style={styles.videoContainer}>
+        <WebView
+          source={{
+            uri: item.videoUrl,
+          }}
+          style={styles.webview}
+          allowsFullscreenVideo
+          allowsInlineMediaPlayback
+          mediaPlaybackRequiresUserAction={false}
+        />
+      </View>
+
+      {/* Title and Description */}
+      <Text style={styles.caption}>{item.title}</Text>
+      <Text style={styles.caption}>{item.description}</Text>
+
+      {/* Like Button */}
+      <TouchableOpacity
+        onPress={() => handleLike(item._id)}
+        style={styles.likeButton}
+      >
+        <FontAwesome
+          name={item.liked ? "heart" : "heart-o"}
+          size={24}
+          color={item.liked ? "#FF6347" : "#fff"}
+        />
+        <Text style={styles.likes}>{item.likes}</Text>
+      </TouchableOpacity>
     </View>
   );
 
   return (
     <FlatList
-      data={posts}
-      keyExtractor={item => item.id}
+      data={videos}
+      keyExtractor={(item) => item._id}
       renderItem={renderItem}
     />
   );
@@ -37,25 +123,40 @@ const FeedView = () => {
 const styles = StyleSheet.create({
   postContainer: {
     padding: 16,
-    backgroundColor: '#000',
+    backgroundColor: "#1a1a1a",
     marginBottom: 16,
+    borderRadius: 8,
   },
   username: {
-    color: '#fff',
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  videoContainer: {
+    width: "100%",
+    height: (screenWidth - 32) * (9 / 16), // Adjust for 16:9 aspect ratio
+    marginBottom: 8,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  webview: {
+    flex: 1,
+  },
+  caption: {
+    color: "#fff",
     fontSize: 16,
     marginBottom: 8,
   },
-  postImage: {
-    width: '100%',
-    height: 200,
-    marginBottom: 8,
-  },
-  caption: {
-    color: '#fff',
+  likeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
   },
   likes: {
-    color: '#ccc',
-    marginTop: 4,
+    color: "#fff",
+    fontSize: 16,
+    marginLeft: 8,
   },
 });
 

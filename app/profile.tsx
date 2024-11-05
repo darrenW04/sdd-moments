@@ -1,87 +1,213 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router'; // Corrected: useLocalSearchParams
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
+
+type Profile = {
+  avatar: string;
+  name: string;
+  bio: string;
+  email: string;
+  location: string;
+  friendsCount: number;
+};
 
 const ProfilePage = () => {
   const router = useRouter();
-  const { friend } = useLocalSearchParams(); // Corrected: Use useLocalSearchParams to get the passed parameters
-  const [profile, setProfile] = useState(friend || null); // Initialize profile state with passed friend data
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (friend) {
-      setProfile(friend); // Update profile state when params change
-    }
-  }, [friend]);
+    const loadProfileData = async () => {
+      try {
+        const storedProfile = await AsyncStorage.getItem("@profile_data");
+        if (storedProfile) {
+          setProfile(JSON.parse(storedProfile));
+        }
+      } catch (error) {
+        console.error("Error loading profile data from AsyncStorage:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProfileData();
+  }, []);
 
-  // Handle case when friend data is not provided
-  if (!profile) {
+  if (loading) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.message}>No profile data available.</Text>
-        {/* Create Profile Button */}
-        <TouchableOpacity
-          style={styles.createButton}
-          onPress={() => router.push('/createProfile')} // Navigate to the CreateProfile screen
-        >
-          <Text style={styles.createButtonText}>Create Profile</Text>
-        </TouchableOpacity>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007bff" />
       </View>
     );
   }
 
+  // Use default values if profile is null
+  const displayedProfile = profile || {
+    avatar: "https://via.placeholder.com/150",
+    name: "John Doe",
+    bio: "This is a sample bio. Update your profile to add more information about yourself.",
+    email: "example@example.com",
+    location: "Unknown",
+    friendsCount: 0,
+  };
+
   return (
-    <View style={styles.container}>
-      {/* Avatar */}
-      <Image source={{ uri: profile.avatar }} style={styles.avatar} />
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <View style={styles.container}>
+        {/* Profile Image */}
+        <Image
+          source={{ uri: displayedProfile.avatar }}
+          style={styles.avatar}
+        />
 
-      {/* Name */}
-      <Text style={styles.name}>{profile.name}</Text>
+        {/* User Name and Bio */}
+        <Text style={styles.name}>{displayedProfile.name}</Text>
+        <Text style={styles.bio}>{displayedProfile.bio}</Text>
 
-      {/* Bio */}
-      <Text style={styles.bio}>{profile.bio}</Text>
-    </View>
+        {/* Additional Info */}
+        <View style={styles.infoContainer}>
+          <Text style={styles.infoTitle}>Email:</Text>
+          <Text style={styles.infoText}>{displayedProfile.email}</Text>
+        </View>
+        <View style={styles.infoContainer}>
+          <Text style={styles.infoTitle}>Location:</Text>
+          <Text style={styles.infoText}>{displayedProfile.location}</Text>
+        </View>
+
+        {/* Edit Profile Button */}
+        <TouchableOpacity
+          style={styles.editButton}
+          onPress={() => router.push("/editProfile")}
+        >
+          <Text style={styles.editButtonText}>Edit Profile</Text>
+        </TouchableOpacity>
+
+        {/* Friends Button with Counter */}
+        <View style={styles.actionsContainer}>
+          <TouchableOpacity
+            style={styles.friendButton}
+            onPress={() => router.push("/friends")}
+          >
+            <Text style={styles.friendButtonText}>Friends</Text>
+            {displayedProfile.friendsCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  {displayedProfile.friendsCount}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: "center",
+    paddingVertical: 20,
+    backgroundColor: "#f8f9fa",
+  },
+  loadingContainer: {
     flex: 1,
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  container: {
+    alignItems: "center",
     padding: 20,
-    backgroundColor: '#f0f0f0',
   },
   avatar: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "#cccccc",
     marginBottom: 20,
   },
   name: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
+    fontSize: 26,
+    fontWeight: "bold",
+    marginBottom: 8,
+    color: "#333",
   },
   bio: {
     fontSize: 16,
-    color: '#333',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
+    paddingHorizontal: 20,
     marginBottom: 20,
   },
-  message: {
-    fontSize: 18,
-    color: 'red',
-    textAlign: 'center',
-    marginTop: 20,
+  infoContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "80%",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
   },
-  createButton: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: '#007bff',
-    borderRadius: 5,
-  },
-  createButtonText: {
-    color: '#fff',
+  infoTitle: {
     fontSize: 16,
+    fontWeight: "600",
+    color: "#555",
+  },
+  infoText: {
+    fontSize: 16,
+    color: "#777",
+  },
+  editButton: {
+    marginTop: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    backgroundColor: "#007bff",
+    borderRadius: 8,
+  },
+  editButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  actionsContainer: {
+    flexDirection: "row",
+    marginTop: 30,
+    justifyContent: "space-around",
+    width: "100%",
+  },
+  friendButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    backgroundColor: "#6c757d",
+    borderRadius: 8,
+    position: "relative",
+  },
+  friendButtonText: {
+    color: "#fff",
+    fontSize: 16,
+  },
+  badge: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    backgroundColor: "#FF6347",
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  badgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "bold",
   },
 });
 

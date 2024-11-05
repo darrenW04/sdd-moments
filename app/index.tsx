@@ -30,6 +30,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 16,
+    backgroundColor: "#ffffff",
   },
   toggleButton: {
     marginTop: 20,

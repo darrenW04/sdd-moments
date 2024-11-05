@@ -33,6 +33,68 @@ async function connectToMongoDB() {
 
 connectToMongoDB();
 
+//Endpoint to get the profile page informtion
+app.get('/api/users/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // Find the current user by ID
+    const user = await db.collection('Users').findOne({ user_id: userId });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Extract relevant information
+    const userData = {
+      username: user.username,
+      email: user.email,
+      profile_picture: user.profile_picture,
+      created_at: user.created_at,
+      friend_count: user.friends ? user.friends.length : 0,
+    };
+
+    res.status(200).json(userData);
+  } catch (error) {
+    console.error('Error fetching user info:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+// Endpoint to get current user and their friends' details
+app.get('/api/users/:userId/friends-details', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // Find the current user by ID
+    const user = await db.collection('Users').findOne({ user_id: userId });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Fetch details for each friend
+    const friendsDetails = await Promise.all(
+      user.friends.map(async (friend) => {
+        const friendDetails = await db.collection('Users').findOne({ user_id: friend.friend_user_id.toString() });
+        return {
+          userId: friend.friend_user_id,
+          name: friendDetails ? friendDetails.username : 'Unknown',
+          avatar: friendDetails ? friendDetails.profile_picture : 'https://via.placeholder.com/100',
+          status: friend.status,
+        };
+      })
+    );
+
+    res.status(200).json({ user, friends: friendsDetails });
+  } catch (error) {
+    console.error('Error fetching friends details:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
 // GET endpoint to fetch all videos
 app.get('/api/videos', async (req, res) => {
     try {
@@ -60,7 +122,7 @@ app.get('/api/videos', async (req, res) => {
     }
   });
 
-app.post('/api/login', async (req, res) => {
+  app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
     console.log('Login attempt with email:', email);
   
@@ -79,12 +141,15 @@ app.post('/api/login', async (req, res) => {
       }
   
       console.log('Login successful');
-      res.status(200).json({ message: 'Login successful' });
+      // Include user_id in the response
+      res.status(200).json({ user_id: user.user_id, message: 'Login successful' });
     } catch (error) {
       console.error("Error during login:", error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
+  
+  
   
 
 // Sign-up endpoint

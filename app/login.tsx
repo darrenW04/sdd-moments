@@ -9,6 +9,8 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 const LoginPage: React.FC = () => {
   const router = useRouter();
@@ -39,8 +41,18 @@ const LoginPage: React.FC = () => {
           password,
         });
         console.log('Response data:', response.data);
-        Alert.alert("Login Successful", `Welcome ${email}!`);
-        router.push("./home");
+      
+        if (response.data && response.data.user_id) {
+          // Store the user ID in AsyncStorage as currentUserId
+          await AsyncStorage.setItem('currentUserId', response.data.user_id.toString());
+          console.log('Current user ID stored in AsyncStorage:', response.data.user_id);
+      
+          Alert.alert("Login Successful", `Welcome ${email}!`);
+          router.push("./home");
+        } else {
+          console.error('User ID not found in response');
+          Alert.alert("Login Failed", "User ID not found in the response");
+        }
       } catch (err: any) {
         console.error('Login error:', err);
         if (axios.isAxiosError(err) && err.response) {
@@ -49,7 +61,7 @@ const LoginPage: React.FC = () => {
         } else {
           Alert.alert("Login Failed", "Network Error");
         }
-      }
+      }         
     } else {
       Alert.alert("Login Failed", "Please fill in all required fields");
     }

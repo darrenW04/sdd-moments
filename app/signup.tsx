@@ -52,7 +52,9 @@ const SignupPage: React.FC = () => {
       Alert.alert("Signup Failed", "Please fix the errors and try again");
     }
   };
-
+  const goToDevPage = () => {
+    router.push("./home"); // Replace "./dev" with the actual route you want to navigate to
+  };
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Signup</Text>
@@ -96,6 +98,10 @@ const SignupPage: React.FC = () => {
 
       <TouchableOpacity style={styles.button} onPress={handleSignup}>
         <Text style={styles.buttonText}>Sign Up</Text>
+      </TouchableOpacity>
+      {/* Dev Button */}
+      <TouchableOpacity style={styles.button} onPress={goToDevPage}>
+        <Text style={styles.buttonText}>Dev</Text>
       </TouchableOpacity>
     </View>
   );

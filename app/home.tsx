@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import FeedView from "./feed";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -8,51 +8,88 @@ const HomePage = () => {
   const router = useRouter();
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView />
-      <Text style={styles.title}>Home Page</Text>
+    <SafeAreaView edges={["top"]} style={styles.safeArea}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Home Page</Text>
 
-      {/* Feed */}
-      <FeedView />
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push("./profile")}
-      >
-        <Text style={styles.buttonText}>Go to Profile</Text>
-      </TouchableOpacity>
+        {/* Profile Picture */}
+        <TouchableOpacity
+          onPress={() => router.push("./profile")}
+          style={styles.profilePicContainer}
+        >
+          <Image
+            source={{ uri: "https://example.com/profile-pic.jpg" }} // Replace with actual URL or local image
+            style={styles.profilePic}
+          />
+        </TouchableOpacity>
+      </View>
 
+      <View style={styles.container}>
+        {/* Feed */}
+        <FeedView />
+      </View>
+
+      {/* Floating Upload Button */}
       <TouchableOpacity
-        style={styles.button}
+        style={styles.uploadButton}
         onPress={() => router.push("./uploads")}
       >
-        <Text style={styles.buttonText}>Go to Uploads Page</Text>
+        <Text style={styles.uploadButtonText}>+</Text>
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    justifyContent: "center",
-    padding: 16,
+    backgroundColor: "#ffffff",
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingBottom: 10,
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 20,
   },
-  button: {
+  profilePicContainer: {
+    borderRadius: 20,
+    overflow: "hidden",
+  },
+  profilePic: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#ccc",
+  },
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  uploadButton: {
+    position: "absolute",
+    bottom: 30,
+    alignSelf: "center",
     backgroundColor: "#007BFF",
-    padding: 15,
-    borderRadius: 5,
-    marginVertical: 10,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5, // Adds shadow for Android
   },
-  buttonText: {
+  uploadButtonText: {
     color: "#fff",
-    fontSize: 18,
-    textAlign: "center",
+    fontSize: 30,
+    fontWeight: "bold",
   },
 });
 

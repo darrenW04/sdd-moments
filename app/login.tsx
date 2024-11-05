@@ -8,21 +8,19 @@ import {
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
+import axios from "axios";
 
-const LoginPage = () => {
+const LoginPage: React.FC = () => {
   const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  const handleLogin = () => {
-    // Reset error messages
+  const handleLogin = async () => {
     setEmailError("");
     setPasswordError("");
 
-    // Simple validation
     let valid = true;
     if (!email) {
       setEmailError("Email is required");
@@ -34,20 +32,32 @@ const LoginPage = () => {
     }
 
     if (valid) {
-      // Simulate login process
-      Alert.alert("Login Successful", `Welcome ${email}!`);
-      router.push("./home");
+      try {
+        console.log('Sending login request with:', { email, password });
+        const response = await axios.post('http://192.168.6.61:3000/api/login', {
+          email,
+          password,
+        });
+        console.log('Response data:', response.data);
+        Alert.alert("Login Successful", `Welcome ${email}!`);
+        router.push("./home");
+      } catch (err: any) {
+        console.error('Login error:', err);
+        if (axios.isAxiosError(err) && err.response) {
+          const errorMessage = err.response.data?.message || "An unexpected error occurred";
+          Alert.alert("Login Failed", errorMessage);
+        } else {
+          Alert.alert("Login Failed", "Network Error");
+        }
+      }
     } else {
       Alert.alert("Login Failed", "Please fill in all required fields");
     }
   };
-  const goToDevPage = () => {
-    router.push("./home"); // Replace "./dev" with the actual route you want to navigate to
-  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
-
       <Text style={styles.label}>Email</Text>
       <TextInput
         style={styles.input}
@@ -68,17 +78,10 @@ const LoginPage = () => {
         onChangeText={setPassword}
         autoCapitalize="none"
       />
-      {passwordError ? (
-        <Text style={styles.errorText}>{passwordError}</Text>
-      ) : null}
+      {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Log In</Text>
-      </TouchableOpacity>
-
-      {/* Dev Button */}
-      <TouchableOpacity style={styles.button} onPress={goToDevPage}>
-        <Text style={styles.buttonText}>Dev</Text>
       </TouchableOpacity>
     </View>
   );

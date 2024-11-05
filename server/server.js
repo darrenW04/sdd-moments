@@ -33,6 +33,33 @@ async function connectToMongoDB() {
 
 connectToMongoDB();
 
+// GET endpoint to fetch all videos
+app.get('/api/videos', async (req, res) => {
+    try {
+      const videos = await db.collection('Videos').find().toArray();
+      if (videos.length === 0) {
+        return res.status(404).json({ message: 'No videos found' });
+      }
+  
+      // Extracting video attributes into separate variables for each video
+      const formattedVideos = videos.map(video => ({
+        videoId: video.video_id,
+        userId: video.user_id,
+        videoUrl: video.video_url,
+        title: video.title,
+        description: video.description,
+        isPublic: video.is_public,
+        uploadTime: video.upload_time,
+        viewCount: video.view_count,
+      }));
+  
+      res.status(200).json(formattedVideos);
+    } catch (error) {
+      console.error("Error fetching videos:", error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
     console.log('Login attempt with email:', email);

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,74 +9,81 @@ import {
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { FontAwesome } from "@expo/vector-icons"; // Use '@expo/vector-icons' for Expo projects
+import axios from "axios";
 
 const screenWidth = Dimensions.get("window").width;
 
-type Post = {
-  id: string;
-  user: string;
-  caption: string;
-  likes: number;
+type Video = {
+  _id: string;
   videoId: string;
-  liked: boolean;
+  userId: string;
+  videoUrl: string;
+  title: string;
+  description: string;
+  isPublic: boolean;
+  uploadTime: string;
+  viewCount: number;
+  liked: boolean; // This property can be added to manage local state
+  likes: number; // Placeholder for like count, if needed
 };
 
 const FeedView = () => {
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: "1",
-      user: "user_name",
-      caption: "This is a test post",
-      likes: 1234,
-      videoId: "K4DyBUG242c",
-      liked: false,
-    },
-    {
-      id: "2",
-      user: "another_user",
-      caption: "Another post",
-      likes: 450,
-      videoId: "K4DyBUG242c",
-      liked: false,
-    },
-    // Add more posts here
-  ]);
+  const [videos, setVideos] = useState<Video[]>([]);
+
+  useEffect(() => {
+    // Fetch videos from the API
+    const fetchVideos = async () => {
+      try {
+        const response = await axios.get("http://192.168.6.61:3000/api/videos"); // Ensure this matches your server's IP and port
+        const fetchedVideos = response.data.map((video: Video) => ({
+          ...video,
+          liked: false, // Default to not liked
+          likes: video.viewCount, // Use view count as a placeholder for likes
+        }));
+        setVideos(fetchedVideos);
+      } catch (error) {
+        console.error("Error fetching videos:", error);
+      }
+    };
+
+    fetchVideos();
+  }, []);
 
   // Function to handle like button press
-  const handleLike = (postId: string) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) => {
-        if (post.id === postId) {
-          const isLiked = !post.liked;
+  const handleLike = (videoId: string) => {
+    setVideos((prevVideos) =>
+      prevVideos.map((video) => {
+        if (video._id === videoId) {
+          const isLiked = !video.liked;
           return {
-            ...post,
-            likes: isLiked ? post.likes + 1 : post.likes - 1,
+            ...video,
+            likes: isLiked ? video.likes + 1 : video.likes - 1,
             liked: isLiked,
           };
         }
-        return post;
+        return video;
       })
     );
 
-    updateLikesOnServer(postId);
+    updateLikesOnServer(videoId);
   };
 
   // Placeholder for the PUT request to update likes
-  const updateLikesOnServer = async (postId: string) => {
+  const updateLikesOnServer = async (videoId: string) => {
     // Implement the PUT request logic here
-    console.log(`Updating likes on server for post ID: ${postId}`);
+    console.log(`Updating likes on server for video ID: ${videoId}`);
   };
 
-  const renderItem = ({ item }: { item: Post }) => (
+  const renderItem = ({ item }: { item: Video }) => (
     <View style={styles.postContainer}>
       {/* User Info */}
-      <Text style={styles.username}>{item.user}</Text>
+      <Text style={styles.username}>{item.userId}</Text>
 
       {/* Video */}
       <View style={styles.videoContainer}>
         <WebView
           source={{
-            uri: `https://www.youtube.com/embed/${item.videoId}?playsinline=1`,
+            uri: item.videoUrl,
           }}
           style={styles.webview}
           allowsFullscreenVideo
@@ -85,12 +92,13 @@ const FeedView = () => {
         />
       </View>
 
-      {/* Caption */}
-      <Text style={styles.caption}>{item.caption}</Text>
+      {/* Title and Description */}
+      <Text style={styles.caption}>{item.title}</Text>
+      <Text style={styles.caption}>{item.description}</Text>
 
       {/* Like Button */}
       <TouchableOpacity
-        onPress={() => handleLike(item.id)}
+        onPress={() => handleLike(item._id)}
         style={styles.likeButton}
       >
         <FontAwesome
@@ -105,8 +113,8 @@ const FeedView = () => {
 
   return (
     <FlatList
-      data={posts}
-      keyExtractor={(item) => item.id}
+      data={videos}
+      keyExtractor={(item) => item._id}
       renderItem={renderItem}
     />
   );

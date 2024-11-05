@@ -8,6 +8,7 @@ import {
   Dimensions,
 } from "react-native";
 import { WebView } from "react-native-webview";
+import { FontAwesome } from "@expo/vector-icons"; // Use '@expo/vector-icons' for Expo projects
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -16,7 +17,8 @@ type Post = {
   user: string;
   caption: string;
   likes: number;
-  videoId: string; // Using YouTube video ID
+  videoId: string;
+  liked: boolean;
 };
 
 const FeedView = () => {
@@ -26,14 +28,16 @@ const FeedView = () => {
       user: "user_name",
       caption: "This is a test post",
       likes: 1234,
-      videoId: "dQw4w9WgXcQ",
+      videoId: "K4DyBUG242c",
+      liked: false,
     },
     {
       id: "2",
       user: "another_user",
       caption: "Another post",
       likes: 450,
-      videoId: "3JZ_D3ELwOQ",
+      videoId: "K4DyBUG242c",
+      liked: false,
     },
     // Add more posts here
   ]);
@@ -41,9 +45,17 @@ const FeedView = () => {
   // Function to handle like button press
   const handleLike = (postId: string) => {
     setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId ? { ...post, likes: post.likes + 1 } : post
-      )
+      prevPosts.map((post) => {
+        if (post.id === postId) {
+          const isLiked = !post.liked;
+          return {
+            ...post,
+            likes: isLiked ? post.likes + 1 : post.likes - 1,
+            liked: isLiked,
+          };
+        }
+        return post;
+      })
     );
 
     updateLikesOnServer(postId);
@@ -57,18 +69,14 @@ const FeedView = () => {
 
   const renderItem = ({ item }: { item: Post }) => (
     <View style={styles.postContainer}>
+      {/* User Info */}
       <Text style={styles.username}>{item.user}</Text>
-      {/* <YoutubePlayer height={300} play={true} videoId={"84WIaK3bl_s"} /> */}
-      {/* <WebView
-        allowsFullscreenVideo
-        allowsInlineMediaPlayback
-        mediaPlaybackRequiresUserAction
-        source={{ uri: "https://www.youtube.com/watch?v=jzD_yyEcp0M" }}
-      /> */}
+
+      {/* Video */}
       <View style={styles.videoContainer}>
         <WebView
           source={{
-            uri: `https://www.youtube.com/embed/K4DyBUG242c`,
+            uri: `https://www.youtube.com/embed/${item.videoId}?playsinline=1`,
           }}
           style={styles.webview}
           allowsFullscreenVideo
@@ -76,12 +84,21 @@ const FeedView = () => {
           mediaPlaybackRequiresUserAction={false}
         />
       </View>
+
+      {/* Caption */}
       <Text style={styles.caption}>{item.caption}</Text>
+
+      {/* Like Button */}
       <TouchableOpacity
         onPress={() => handleLike(item.id)}
         style={styles.likeButton}
       >
-        <Text style={styles.likes}>Likes: {item.likes}</Text>
+        <FontAwesome
+          name={item.liked ? "heart" : "heart-o"}
+          size={24}
+          color={item.liked ? "#FF6347" : "#fff"}
+        />
+        <Text style={styles.likes}>{item.likes}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -104,29 +121,34 @@ const styles = StyleSheet.create({
   },
   username: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: "bold",
     marginBottom: 8,
   },
   videoContainer: {
     width: "100%",
     height: (screenWidth - 32) * (9 / 16), // Adjust for 16:9 aspect ratio
     marginBottom: 8,
+    borderRadius: 8,
+    overflow: "hidden",
   },
   webview: {
     flex: 1,
-    borderRadius: 8,
   },
   caption: {
     color: "#fff",
+    fontSize: 16,
     marginBottom: 8,
   },
   likeButton: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 8,
-    alignItems: "flex-start",
   },
   likes: {
-    color: "#ccc",
-    fontSize: 14,
+    color: "#fff",
+    fontSize: 16,
+    marginLeft: 8,
   },
 });
 

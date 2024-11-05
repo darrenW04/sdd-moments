@@ -1,193 +1,125 @@
-import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { useState, useRef } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View, TextInput } from 'react-native';
-import { Video } from 'expo-av';
+import React, { useState, useRef } from "react";
+import { Button, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function UploadsPage() {
-  const [facing, setFacing] = useState<CameraType>('back'); // Toggle between front and back cameras
-  const [permission, requestPermission] = useCameraPermissions(); // Handle permissions
-  const [isRecording, setIsRecording] = useState(false); // Manage recording state
-  const [videoUri, setVideoUri] = useState<string | null>(null); // Store video URI
-  const cameraRef = useRef(null); // Ref to access the camera component
+  const [facing, setFacing] = useState<CameraType>("back");
+  const [permission, requestPermission] = useCameraPermissions();
+  const [isRecording, setIsRecording] = useState(false);
+  const [videoUri, setVideoUri] = useState<string | null>(null);
+  const cameraRef = useRef<CameraView | null>(null); // Reference for CameraView
 
   if (!permission) {
-    // Camera permissions are still loading
     return <View />;
   }
 
   if (!permission.granted) {
-    // Camera permissions not granted
     return (
-      <View style={styles.permissionContainer}>
-        <Text style={styles.message}>We need your permission to show the camera</Text>
+      <View style={styles.container}>
+        <Text style={styles.message}>
+          We need your permission to show the camera
+        </Text>
         <Button onPress={requestPermission} title="Grant Permission" />
       </View>
     );
   }
 
-  // Toggle between front and back camera
-  function toggleCameraFacing() {
-    setFacing((current) => (current === 'back' ? 'front' : 'back'));
-  }
-
-  // Start and stop video recording
-  const toggleRecording = async () => {
-    if (cameraRef.current) {
-      if (isRecording) {
-        cameraRef.current.stopRecording(); // Stop recording
-        setIsRecording(false);
-      } else {
-        setIsRecording(true);
-        const video = await cameraRef.current.recordAsync(); // Start recording
-        setVideoUri(video.uri); // Store the video URI after recording
+  const startRecording = async () => {
+    if (cameraRef.current && !isRecording) {
+      setIsRecording(true);
+      try {
+        console.log("Start recording...");
+        const recordedVideo = await cameraRef.current.recordAsync({
+          maxDuration: 30, // max duration in seconds
+          maxFileSize: 50 * 1024 * 1024, // max file size in bytes (50 MB)
+        });
+        console.log("Recorded video:", recordedVideo);
+        if (recordedVideo?.uri) {
+          setVideoUri(recordedVideo.uri);
+          console.log("Recorded video URI:", recordedVideo.uri);
+        }
+      } catch (error) {
+        console.error("Error recording video:", error);
+      } finally {
         setIsRecording(false);
       }
     }
   };
 
+  const stopRecording = () => {
+    if (cameraRef.current && isRecording) {
+      console.log("Stop recording...", cameraRef.current);
+      cameraRef.current.stopRecording();
+      setIsRecording(false);
+    }
+  };
+
+  const toggleCameraFacing = () => {
+    setFacing((prevFacing) => (prevFacing === "back" ? "front" : "back"));
+  };
+
   return (
-    <View style={styles.container}>
-      {videoUri ? (
-        // Display the recorded video
-        <Video
-          source={{ uri: videoUri }}
-          style={styles.video}
-          useNativeControls
-          resizeMode="contain"
-          isLooping
-        />
-      ) : (
-        // Show the camera preview if no video is recorded yet
-        <CameraView style={styles.camera} facing={facing} ref={cameraRef}>
-          <View style={styles.controlsContainer}>
-            {/* Mute button */}
-            <TouchableOpacity style={styles.controlButton}>
-              <Text style={styles.controlText}>🔇</Text>
-            </TouchableOpacity>
-
-            {/* Recording button */}
-            <TouchableOpacity
-              style={isRecording ? styles.stopButton : styles.recordButton}
-              onPress={toggleRecording}
-            >
-              <View style={styles.recordIndicator} />
-            </TouchableOpacity>
-
-            {/* Flip camera button */}
-            <TouchableOpacity style={styles.controlButton} onPress={toggleCameraFacing}>
-              <Text style={styles.controlText}>🔄</Text>
-            </TouchableOpacity>
-          </View>
-        </CameraView>
-      )}
-
-      {/* Caption Input */}
-      {!videoUri && (
-        <View style={styles.captionContainer}>
-          <TextInput
-            style={styles.captionInput}
-            placeholder="Add a caption..."
-            placeholderTextColor="#999"
-            onChangeText={() => {}}
-          />
-          <TouchableOpacity style={styles.sendButton}>
-            <Text style={styles.sendButtonText}>SEND ➤</Text>
+    <SafeAreaView style={styles.container}>
+      <CameraView
+        style={styles.camera}
+        mode="video"
+        facing={facing}
+        ref={cameraRef}
+        mirror={facing === "front"} // Use mirror prop directly for front camera
+      >
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
+            <Text style={styles.text}>Flip</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={startRecording}>
+            <Text style={styles.text}>
+              {isRecording ? "Recording..." : "Record"}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={stopRecording}>
+            <Text style={styles.text}>Stop</Text>
           </TouchableOpacity>
         </View>
+      </CameraView>
+      {videoUri && (
+        <View style={styles.videoContainer}>
+          <Text>Video saved at: {videoUri}</Text>
+        </View>
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
-  },
-  permissionContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
   },
   message: {
-    textAlign: 'center',
-    color: '#fff',
+    textAlign: "center",
     paddingBottom: 10,
   },
   camera: {
     flex: 1,
   },
-  controlsContainer: {
-    position: 'absolute',
-    bottom: 40,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 40,
+  buttonContainer: {
+    flexDirection: "row",
+    backgroundColor: "transparent",
+    alignSelf: "center",
+    margin: 20,
   },
-  controlButton: {
-    padding: 20,
-  },
-  controlText: {
-    fontSize: 30,
-    color: '#fff',
-  },
-  recordButton: {
-    width: 80,
-    height: 80,
-    backgroundColor: 'red',
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stopButton: {
-    width: 80,
-    height: 80,
-    backgroundColor: 'orange',
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  recordIndicator: {
-    width: 40,
-    height: 40,
-    backgroundColor: '#fff',
-    borderRadius: 20,
-  },
-  video: {
+  button: {
     flex: 1,
-    width: '100%',
+    alignItems: "center",
   },
-  captionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#333',
-    backgroundColor: '#222',
+  text: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "white",
   },
-  captionInput: {
-    flex: 1,
-    color: '#fff',
-    backgroundColor: '#333',
-    borderRadius: 5,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    fontSize: 16,
-  },
-  sendButton: {
-    marginLeft: 10,
-    backgroundColor: '#007bff',
-    borderRadius: 5,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-  },
-  sendButtonText: {
-    color: '#fff',
-    fontSize: 16,
+  videoContainer: {
+    padding: 16,
+    backgroundColor: "#fff",
   },
 });
-

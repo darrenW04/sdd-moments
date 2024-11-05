@@ -41,7 +41,9 @@ const LoginPage = () => {
       Alert.alert("Login Failed", "Please fill in all required fields");
     }
   };
-
+  const goToDevPage = () => {
+    router.push("./home"); // Replace "./dev" with the actual route you want to navigate to
+  };
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
@@ -72,6 +74,11 @@ const LoginPage = () => {
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Log In</Text>
+      </TouchableOpacity>
+
+      {/* Dev Button */}
+      <TouchableOpacity style={styles.button} onPress={goToDevPage}>
+        <Text style={styles.buttonText}>Dev</Text>
       </TouchableOpacity>
     </View>
   );

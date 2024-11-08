@@ -34,14 +34,15 @@ const LoginPage: React.FC = () => {
     }
 
     if (valid) {
+      router.push("./home");
       try {
         console.log('Sending login request with:', { email, password });
-        const response = await axios.post('http://192.168.6.61:3000/api/login', {
+        const response = await axios.post('http://129.161.71.227:3000/api/login', {
           email,
           password,
         });
         console.log('Response data:', response.data);
-      
+        
         if (response.data && response.data.user_id) {
           // Store the user ID in AsyncStorage as currentUserId
           await AsyncStorage.setItem('currentUserId', response.data.user_id.toString());

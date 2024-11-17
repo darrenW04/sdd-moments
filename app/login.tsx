@@ -11,7 +11,6 @@ import { useRouter } from "expo-router";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-
 const LoginPage: React.FC = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -35,33 +34,43 @@ const LoginPage: React.FC = () => {
 
     if (valid) {
       try {
-        console.log('Sending login request with:', { email, password });
-        const response = await axios.post('http://192.168.6.61:3000/api/login', {
-          email,
-          password,
-        });
-        console.log('Response data:', response.data);
-      
+        console.log("Sending login request with:", { email, password });
+        const response = await axios.post(
+          "http://192.168.6.42:3000/api/login",
+          {
+            email,
+            password,
+          }
+        );
+        console.log("Response data:", response.data);
+
         if (response.data && response.data.user_id) {
           // Store the user ID in AsyncStorage as currentUserId
-          await AsyncStorage.setItem('currentUserId', response.data.user_id.toString());
-          console.log('Current user ID stored in AsyncStorage:', response.data.user_id);
-      
+          await AsyncStorage.setItem(
+            "currentUserId",
+            response.data.user_id.toString()
+          );
+          console.log(
+            "Current user ID stored in AsyncStorage:",
+            response.data.user_id
+          );
+
           Alert.alert("Login Successful", `Welcome ${email}!`);
           router.push("./home");
         } else {
-          console.error('User ID not found in response');
+          console.error("User ID not found in response");
           Alert.alert("Login Failed", "User ID not found in the response");
         }
       } catch (err: any) {
-        console.error('Login error:', err);
+        console.error("Login error:", err);
         if (axios.isAxiosError(err) && err.response) {
-          const errorMessage = err.response.data?.message || "An unexpected error occurred";
+          const errorMessage =
+            err.response.data?.message || "An unexpected error occurred";
           Alert.alert("Login Failed", errorMessage);
         } else {
           Alert.alert("Login Failed", "Network Error");
         }
-      }         
+      }
     } else {
       Alert.alert("Login Failed", "Please fill in all required fields");
     }
@@ -90,7 +99,9 @@ const LoginPage: React.FC = () => {
         onChangeText={setPassword}
         autoCapitalize="none"
       />
-      {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+      {passwordError ? (
+        <Text style={styles.errorText}>{passwordError}</Text>
+      ) : null}
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Log In</Text>

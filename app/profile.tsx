@@ -36,7 +36,7 @@ const ProfilePage = () => {
         }
 
         const response = await axios.get(
-          `http://192.168.6.61:3000/api/users/${currentUserId}`
+          `http://192.168.6.42:3000/api/users/${currentUserId}`
         );
 
         if (response.data) {
@@ -80,7 +80,8 @@ const ProfilePage = () => {
       <View style={styles.profileSection}>
         <Image
           source={{
-            uri: userProfile.profile_picture || "https://via.placeholder.com/150",
+            uri:
+              userProfile.profile_picture || "https://via.placeholder.com/150",
           }}
           style={styles.avatar}
         />
@@ -88,9 +89,13 @@ const ProfilePage = () => {
         <View style={styles.infoContainer}>
           <Text style={styles.username}>{userProfile.username}</Text>
           <Text style={styles.email}>{`Email: ${userProfile.email}`}</Text>
-          <Text style={styles.info}>{`Friends: ${userProfile.friend_count}`}</Text>
+          <Text
+            style={styles.info}
+          >{`Friends: ${userProfile.friend_count}`}</Text>
           <Text style={styles.info}>
-            {`Account Created: ${new Date(userProfile.created_at).toLocaleString()}`}
+            {`Account Created: ${new Date(
+              userProfile.created_at
+            ).toLocaleString()}`}
           </Text>
         </View>
 
@@ -142,7 +147,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
-    marginTop: -100, 
+    marginTop: -100,
   },
   avatar: {
     width: 120,

@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Button, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
+import { Video, ResizeMode } from "expo-av"; // Import Video and ResizeMode components
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function UploadsPage() {
@@ -9,6 +10,7 @@ export default function UploadsPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [videoUri, setVideoUri] = useState<string | null>(null);
   const cameraRef = useRef<CameraView | null>(null); // Reference for CameraView
+  const videoRef = useRef<Video | null>(null); // Reference for Video component
 
   if (!permission) {
     return <View />;
@@ -85,6 +87,14 @@ export default function UploadsPage() {
       {videoUri && (
         <View style={styles.videoContainer}>
           <Text>Video saved at: {videoUri}</Text>
+          <Video
+            ref={videoRef}
+            source={{ uri: videoUri }}
+            style={styles.video}
+            useNativeControls
+            resizeMode={ResizeMode.CONTAIN}
+            isLooping
+          />
         </View>
       )}
     </SafeAreaView>
@@ -121,5 +131,10 @@ const styles = StyleSheet.create({
   videoContainer: {
     padding: 16,
     backgroundColor: "#fff",
+  },
+  video: {
+    width: "100%",
+    height: 300, // Adjust as needed
+    backgroundColor: "black",
   },
 });

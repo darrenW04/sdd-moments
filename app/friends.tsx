@@ -37,7 +37,7 @@ const FriendsPage = () => {
         }
 
         const response = await axios.get(
-          `http://192.168.6.61:3000/api/users/${currentUserId}/friends-details`
+          `http://192.168.6.42:3000/api/users/${currentUserId}/friends-details`
         );
 
         if (response.data) {
@@ -69,7 +69,10 @@ const FriendsPage = () => {
     <View style={styles.container}>
       <SafeAreaView edges={["top"]} />
       {/* Back Button */}
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        style={styles.backButton}
+      >
         <FontAwesome name="arrow-left" size={24} color="#fff" />
       </TouchableOpacity>
 
@@ -95,7 +98,9 @@ const FriendsPage = () => {
             />
             <View style={styles.friendDetails}>
               <Text style={styles.friendName}>{item.name}</Text>
-              <Text style={styles.friendStatus}>{`Status: ${item.status}`}</Text>
+              <Text
+                style={styles.friendStatus}
+              >{`Status: ${item.status}`}</Text>
             </View>
             <TouchableOpacity style={styles.profileButton}>
               <Text style={styles.profileButtonText}>View Profile</Text>

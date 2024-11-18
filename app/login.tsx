@@ -76,6 +76,10 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  const handleDev = async () => {
+    //Push to home page
+    router.push("./home");
+  };
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
@@ -105,6 +109,9 @@ const LoginPage: React.FC = () => {
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Log In</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={handleDev}>
+        <Text style={styles.buttonText}>Dev</Text>
       </TouchableOpacity>
     </View>
   );

@@ -11,39 +11,62 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome } from "@expo/vector-icons"; // For the back icon
+import axios from "axios";
 
 const EditProfile = () => {
   const router = useRouter();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const [profile, setProfile] = useState({
     avatar: "",
     name: "",
-    bio: "",
     email: "",
-    location: "",
   });
 
   useEffect(() => {
-    // Load profile data from AsyncStorage
+    // Load profile data from the server
     const loadProfile = async () => {
-      const storedProfile = await AsyncStorage.getItem("@profile_data");
-      if (storedProfile) {
-        setProfile(JSON.parse(storedProfile));
+      try {
+        const userId = await AsyncStorage.getItem("currentUserId");
+        if (!userId) {
+          console.error("Current user ID not found");
+          return;
+        }
+        setCurrentUserId(userId);
+
+        const response = await axios.get(
+          `http://192.168.6.61:3000/api/users/${userId}`
+        );
+        const { profile_picture, username, email } = response.data;
+        setProfile({
+          avatar: profile_picture,
+          name: username,
+          email: email,
+        });
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
       }
     };
+
     loadProfile();
   }, []);
 
   const handleSave = async () => {
-    // Save updated profile data to AsyncStorage
+    if (!currentUserId) {
+      Alert.alert("Error", "User ID not found");
+      return;
+    }
+
     try {
-      await AsyncStorage.setItem("@profile_data", JSON.stringify(profile));
-      Alert.alert(
-        "Profile Updated",
-        "Your profile has been updated successfully."
+      // Send updated profile data to the server
+      const response = await axios.put(
+        `http://192.168.6.61:3000/api/users/${currentUserId}`,
+        profile
       );
+      Alert.alert("Profile Updated", response.data.message);
       router.push("/profile"); // Navigate back to Profile page
     } catch (error) {
+      console.error("Error updating profile:", error);
       Alert.alert("Error", "There was an error saving your profile.");
     }
   };
@@ -76,17 +99,6 @@ const EditProfile = () => {
         onChangeText={(text) => setProfile({ ...profile, name: text })}
       />
 
-      {/* Bio */}
-      <Text style={styles.label}>Bio</Text>
-      <TextInput
-        style={[styles.input, styles.textArea]}
-        placeholder="Enter a short bio"
-        value={profile.bio}
-        multiline
-        numberOfLines={4}
-        onChangeText={(text) => setProfile({ ...profile, bio: text })}
-      />
-
       {/* Email */}
       <Text style={styles.label}>Email</Text>
       <TextInput
@@ -94,15 +106,6 @@ const EditProfile = () => {
         placeholder="Enter your email"
         value={profile.email}
         onChangeText={(text) => setProfile({ ...profile, email: text })}
-      />
-
-      {/* Location */}
-      <Text style={styles.label}>Location</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your location"
-        value={profile.location}
-        onChangeText={(text) => setProfile({ ...profile, location: text })}
       />
 
       {/* Save Button */}
@@ -151,10 +154,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 15,
     backgroundColor: "#fff",
-  },
-  textArea: {
-    height: 80,
-    textAlignVertical: "top", // Ensures text starts from the top in multiline input
   },
   saveButton: {
     backgroundColor: "#007bff",

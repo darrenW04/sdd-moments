@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const bodyParser = require('body-parser');
 
 const app = express();
@@ -32,6 +32,52 @@ async function connectToMongoDB() {
 }
 
 connectToMongoDB();
+
+
+// Update user profile
+app.put('/api/users/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const { avatar, name, email } = req.body;
+
+    // Validate input
+    if (!avatar || !name || !email) {
+      return res.status(400).json({ message: 'All fields (avatar, name, email) are required.' });
+    }
+
+    // Check if userId is a valid ObjectId
+    let query = {};
+    if (/^[0-9a-fA-F]{24}$/.test(userId)) {
+      query = { _id: new ObjectId(userId) };
+    } else {
+      query = { user_id: userId }; // Use alternate field if `user_id` is a string in your database
+    }
+
+    // Update user in the database
+    const updateResult = await db.collection('Users').updateOne(
+      query,
+      {
+        $set: {
+          profile_picture: avatar,
+          username: name,
+          email: email,
+          updated_at: new Date().toISOString(),
+        },
+      }
+    );
+
+    if (updateResult.matchedCount === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({ message: 'Profile updated successfully' });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
 
 //Endpoint to get the profile page informtion
 app.get('/api/users/:userId', async (req, res) => {

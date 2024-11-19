@@ -14,7 +14,7 @@ const HomePage = () => {
 
         {/* Profile Picture */}
         <TouchableOpacity
-          onPress={() => router.push("./profile")}
+          onPress={() => router.replace("./profile")}
           style={styles.profilePicContainer}
         >
           <Image

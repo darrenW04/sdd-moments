@@ -56,7 +56,7 @@ const LoginPage: React.FC = () => {
           );
 
           Alert.alert("Login Successful", `Welcome ${email}!`);
-          router.push("./home");
+          router.replace("./home");
         } else {
           console.error("User ID not found in response");
           Alert.alert("Login Failed", "User ID not found in the response");
@@ -78,7 +78,7 @@ const LoginPage: React.FC = () => {
 
   const handleDev = async () => {
     //Push to home page
-    router.push("./home");
+    router.replace("./home");
   };
   return (
     <View style={styles.container}>

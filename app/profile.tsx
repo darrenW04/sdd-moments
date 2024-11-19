@@ -81,7 +81,10 @@ const ProfilePage = () => {
     <View style={styles.container}>
       <SafeAreaView edges={["top"]} />
       {/* Back Button */}
-      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+      <TouchableOpacity
+        onPress={() => router.replace("/home")}
+        style={styles.backButton}
+      >
         <FontAwesome name="arrow-left" size={24} color="#fff" />
       </TouchableOpacity>
 

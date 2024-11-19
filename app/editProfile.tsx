@@ -62,7 +62,7 @@ const EditProfile = () => {
         profile
       );
       Alert.alert("Profile Updated", response.data.message);
-      router.push("/profile");
+      router.replace("/profile");
     } catch (error) {
       console.error("Error updating profile:", error);
       Alert.alert("Error", "There was an error saving your profile.");
@@ -73,7 +73,10 @@ const EditProfile = () => {
     <View style={styles.container}>
       <SafeAreaView edges={["top"]} />
       {/* Back Button */}
-      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+      <TouchableOpacity
+        onPress={() => router.replace("/profile")}
+        style={styles.backButton}
+      >
         <FontAwesome name="arrow-left" size={24} color="#fff" />
       </TouchableOpacity>
 

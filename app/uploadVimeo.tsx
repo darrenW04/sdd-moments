@@ -13,7 +13,7 @@ const ACCESS_TOKEN = "32277fd36fa4e8eb1f850797ffe557aa";
 // Function to get the video file size
 export const uploadVideoToVimeo = async (uri: string) => {
   try {
-    const response = await axios.post("http://129.161.88.59:3000/api/vimeo", {
+    const response = await axios.post("http://192.168.6.42:3000/api/vimeo", {
       filePath: uri,
     });
     console.log(

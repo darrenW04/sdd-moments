@@ -1,68 +1,20 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Button, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Button,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 import { Video, ResizeMode } from "expo-av"; // Import Video and ResizeMode components
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as DocumentPicker from "expo-document-picker";
-import axios from "axios";
-import * as FileSystem from "expo-file-system";
+import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library"; // Import MediaLibrary for saving videos
-
-async function pickAndUploadVideo() {
-  try {
-    // Open the document picker to select a video file
-    const result = await DocumentPicker.getDocumentAsync({
-      type: "video/*", // Only allow video files
-    });
-
-    // Check if the user canceled the document picker
-    if (result.canceled) {
-      console.log("User canceled the picker");
-      return;
-    }
-
-    // Ensure that there are assets selected (result.assets)
-    if (!result.assets || result.assets.length === 0) {
-      console.log("No assets selected");
-      return;
-    }
-
-    // Get the first asset (video) from the assets array
-    const videoAsset = result.assets[0];
-
-    // Extract URI, name, and type from the asset
-    const fileUri = videoAsset.uri;
-    const fileName = videoAsset.name || fileUri.split("/").pop(); // Fallback if name is missing
-    const fileType = videoAsset.mimeType || "video/mp4"; // Default MIME type if missing
-
-    // Prepare the form data to send to the server
-    const formData = new FormData();
-    const fileBlob = await FileSystem.readAsStringAsync(fileUri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-    const blob = new Blob([fileBlob], { type: fileType });
-    formData.append("file", blob, fileName);
-
-    // Send the file to the server
-    const response = await axios.post(
-      "http://129.161.88.59:3000/api/vimeo",
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
-
-    console.log(
-      "Video uploaded successfully. Video URI:",
-      response.data.videoUri
-    );
-  } catch (error) {
-    console.error("Error uploading video:", error);
-  }
-}
-
+import { CameraRoll } from "@react-native-camera-roll/camera-roll";
+import { PermissionsAndroid } from "react-native";
 export default function UploadsPage() {
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
@@ -72,6 +24,9 @@ export default function UploadsPage() {
   const videoRef = useRef<Video | null>(null); // Reference for Video component
   const [hasMediaLibraryPermission, setHasMediaLibraryPermission] =
     useState(false);
+  const [image, setImage] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
+
   useEffect(() => {
     const getPermissions = async () => {
       const { status } = await MediaLibrary.requestPermissionsAsync();
@@ -94,6 +49,20 @@ export default function UploadsPage() {
       </View>
     );
   }
+  const pickMedia = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["videos"],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    console.log(result);
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
 
   const startRecording = async () => {
     if (cameraRef.current && !isRecording) {
@@ -121,31 +90,6 @@ export default function UploadsPage() {
     if (cameraRef.current && isRecording) {
       cameraRef.current.stopRecording();
       setIsRecording(false);
-
-      if (videoUri) {
-        console.log("Saving video to Camera Roll...");
-
-        try {
-          // Check if permissions are granted before saving
-          if (!hasMediaLibraryPermission) {
-            console.log("No media library permission.");
-            return;
-          }
-
-          const asset = await MediaLibrary.createAssetAsync(videoUri);
-          const album = await MediaLibrary.createAlbumAsync(
-            "Camera",
-            asset,
-            false
-          );
-
-          console.log("Video saved to Camera Roll:", asset.uri);
-        } catch (error) {
-          console.error("Error saving video to Camera Roll:", error);
-        }
-      } else {
-        console.log("No video URI found to save.");
-      }
     }
   };
 
@@ -156,8 +100,118 @@ export default function UploadsPage() {
   const uploadVideo = async () => {
     if (videoUri) {
       // Call the function to upload video using the video URI
-      pickAndUploadVideo();
+      pickMedia();
     }
+  };
+  async function saveVideoToCameraRoll(videoUri: string) {
+    try {
+      if (Platform.OS === "android") {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+          {
+            title: "Camera Roll Permission",
+            message:
+              "This app needs access to your camera roll to save videos.",
+            buttonNeutral: "Ask Me Later",
+            buttonNegative: "Cancel",
+            buttonPositive: "OK",
+          }
+        );
+
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          Alert.alert(
+            "Permission required",
+            "Please grant storage permissions."
+          );
+          return;
+        }
+      }
+
+      // Save the video to camera roll
+      CameraRoll.save(videoUri, { type: "video" });
+      Alert.alert("Success", "Video saved to camera roll successfully!", [
+        { text: "OK" },
+      ]);
+
+      // console.log("Saved video:", result);
+    } catch (error) {
+      console.error("Error saving video:", error);
+      Alert.alert("Error", "Failed to save the video to camera roll.");
+    }
+  }
+  const downloadAndSaveVideo = async () => {
+    try {
+      if (videoUri === null) {
+        return;
+      }
+      // Request media library permissions
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      await MediaLibrary.getPermissionsAsync(true, ["video"]);
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission required",
+          "Please grant media library permissions."
+        );
+        return;
+      }
+
+      // Rename the .mov file to .mp4
+      // const mp4Uri = videoUri.replace(".mov", ".mp4");
+      // await FileSystem.moveAsync({
+      //   from: videoUri,
+      //   to: mp4Uri,
+      // });
+
+      // Save to camera roll
+      // const fileName = videoUri.replace(/^.*[\\\/]/, "");
+      // let imageFullPathInLocalStorage = FileSystem.documentDirectory + fileName;
+      // console.log(imageFullPathInLocalStorage);
+      console.log(videoUri);
+      await MediaLibrary.saveToLibraryAsync(videoUri);
+      Alert.alert("Success", "Video saved to camera roll successfully!");
+    } catch (error) {
+      console.error("Error saving video:", error);
+      Alert.alert("Error", "Failed to save the video to camera roll.");
+    }
+    // const { status } = await MediaLibrary.requestPermissionsAsync();
+    // if (status !== "granted") {
+    //   alert("Permission to access media library is required!");
+    //   return;
+    // }
+
+    // const videoUrl = "http://techslides.com/demos/sample-videos/small.mp4";
+    // const fileUri = FileSystem.documentDirectory + "small.mp4";
+
+    // const callback = (downloadProgress: FileSystem.DownloadProgressData) => {
+    //   const progress =
+    //     downloadProgress.totalBytesWritten /
+    //     downloadProgress.totalBytesExpectedToWrite;
+    //   setProgress(progress);
+    // };
+
+    // try {
+    //   const downloadResult = await FileSystem.createDownloadResumable(
+    //     videoUrl,
+    //     fileUri,
+    //     {},
+    //     callback
+    //   ).downloadAsync();
+
+    //   if (downloadResult) {
+    //     const { uri } = downloadResult;
+    //     console.log("Finished downloading to:", uri);
+
+    //     // Save directly to the media library
+    //     await MediaLibrary.saveToLibraryAsync(uri);
+    //     alert("Video saved to camera roll successfully!");
+    //   } else {
+    //     console.error("Download failed.");
+    //     alert("Failed to download the video.");
+    //   }
+    // } catch (error) {
+    //   console.error("Error downloading or saving video:", error);
+    //   alert("Failed to download or save the video.");
+    // }
   };
 
   return (
@@ -186,8 +240,16 @@ export default function UploadsPage() {
       {videoUri && (
         <View style={styles.videoContainer}>
           <Text>Video saved at: {videoUri}</Text>
-          <TouchableOpacity style={styles.button} onPress={uploadVideo}>
-            <Text style={{ color: "black" }}>Upload</Text>
+          <TouchableOpacity style={styles.button2} onPress={uploadVideo}>
+            <Text style={styles.text}>Upload</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button2}
+            onPress={() => {
+              saveVideoToCameraRoll(videoUri);
+            }}
+          >
+            <Text style={styles.text}>Save</Text>
           </TouchableOpacity>
           <Video
             ref={videoRef}
@@ -232,6 +294,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#1E90FF", // Blue background for visibility
     marginHorizontal: 5,
     borderRadius: 5,
+  },
+  button2: {
+    alignItems: "center", // Centers text horizontally
+    justifyContent: "center", // Centers text vertically
+    paddingVertical: 20, // Increases vertical padding
+    paddingHorizontal: 40, // Increases horizontal padding
+    backgroundColor: "#1E90FF", // Blue background for visibility
+    marginHorizontal: 10, // Adjusts spacing between buttons
+    borderRadius: 10, // Slightly more rounded corners
   },
   text: {
     fontSize: 18,

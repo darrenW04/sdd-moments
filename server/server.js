@@ -39,7 +39,7 @@ async function connectToMongoDB() {
   }
 }
 
-// connectToMongoDB();
+connectToMongoDB();
 
 // Vimeo upload endpoint
 app.post("/api/vimeo", async (req, res) => {

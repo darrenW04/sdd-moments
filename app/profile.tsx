@@ -36,7 +36,7 @@ const ProfilePage = () => {
         }
 
         const response = await axios.get(
-          `http://192.168.6.61:3000/api/users/${currentUserId}`
+          `http://192.168.6.42:3000/api/users/${currentUserId}`
         );
 
         if (response.data) {
@@ -81,7 +81,10 @@ const ProfilePage = () => {
     <View style={styles.container}>
       <SafeAreaView edges={["top"]} />
       {/* Back Button */}
-      <TouchableOpacity onPress={() => router.push("/home")} style={styles.backButton}>
+      <TouchableOpacity
+        onPress={() => router.push("/home")}
+        style={styles.backButton}
+      >
         <FontAwesome name="arrow-left" size={24} color="#fff" />
       </TouchableOpacity>
 
@@ -89,7 +92,8 @@ const ProfilePage = () => {
       <View style={styles.profileSection}>
         <Image
           source={{
-            uri: userProfile.profile_picture || "https://via.placeholder.com/150",
+            uri:
+              userProfile.profile_picture || "https://via.placeholder.com/150",
           }}
           style={styles.avatar}
         />
@@ -97,9 +101,13 @@ const ProfilePage = () => {
         <View style={styles.infoContainer}>
           <Text style={styles.username}>{userProfile.username}</Text>
           <Text style={styles.email}>{`Email: ${userProfile.email}`}</Text>
-          <Text style={styles.info}>{`Friends: ${userProfile.friend_count}`}</Text>
+          <Text
+            style={styles.info}
+          >{`Friends: ${userProfile.friend_count}`}</Text>
           <Text style={styles.info}>
-            {`Account Created: ${new Date(userProfile.created_at).toLocaleString()}`}
+            {`Account Created: ${new Date(
+              userProfile.created_at
+            ).toLocaleString()}`}
           </Text>
         </View>
 

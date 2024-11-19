@@ -1,14 +1,40 @@
-import React, { useState, useRef } from "react";
-import { Button, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useState, useRef, useEffect } from "react";
+import {
+  Button,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Modal,
+  Image,
+} from "react-native";
 import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
+import { Video, ResizeMode } from "expo-av";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as MediaLibrary from "expo-media-library";
+import { UploadCachedVideo, uploadVideoToVimeo } from "./uploadVimeo";
+import * as ImagePicker from "expo-image-picker";
+import { Ionicons as Icon } from "@expo/vector-icons";
 
 export default function UploadsPage() {
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
   const [isRecording, setIsRecording] = useState(false);
   const [videoUri, setVideoUri] = useState<string | null>(null);
-  const cameraRef = useRef<CameraView | null>(null); // Reference for CameraView
+  const [isModalVisible, setIsModalVisible] = useState(false); // State for overlay/modal
+  const cameraRef = useRef<CameraView | null>(null);
+  const videoRef = useRef<Video | null>(null);
+  const [hasMediaLibraryPermission, setHasMediaLibraryPermission] =
+    useState(false);
+
+  useEffect(() => {
+    const getPermissions = async () => {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      setHasMediaLibraryPermission(status === "granted");
+    };
+
+    getPermissions();
+  }, []);
 
   if (!permission) {
     return <View />;
@@ -31,10 +57,9 @@ export default function UploadsPage() {
       try {
         console.log("Start recording...");
         const recordedVideo = await cameraRef.current.recordAsync({
-          maxDuration: 30, // max duration in seconds
-          maxFileSize: 50 * 1024 * 1024, // max file size in bytes (50 MB)
+          maxDuration: 30,
+          maxFileSize: 50 * 1024 * 1024,
         });
-        console.log("Recorded video:", recordedVideo);
         if (recordedVideo?.uri) {
           setVideoUri(recordedVideo.uri);
           console.log("Recorded video URI:", recordedVideo.uri);
@@ -47,11 +72,11 @@ export default function UploadsPage() {
     }
   };
 
-  const stopRecording = () => {
+  const stopRecording = async () => {
     if (cameraRef.current && isRecording) {
-      console.log("Stop recording...", cameraRef.current);
       cameraRef.current.stopRecording();
       setIsRecording(false);
+      setIsModalVisible(true); // Show overlay when recording stops
     }
   };
 
@@ -59,6 +84,29 @@ export default function UploadsPage() {
     setFacing((prevFacing) => (prevFacing === "back" ? "front" : "back"));
   };
 
+  const uploadVideo = async () => {
+    if (videoUri) {
+      await UploadCachedVideo(videoUri);
+      setIsModalVisible(false);
+    }
+  };
+  const pickMedia = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["videos"],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    console.log(result);
+    if (result.assets) {
+      setVideoUri(result.assets[0].uri);
+      uploadVideoToVimeo(result);
+    }
+    if (!result.canceled) {
+      // setImage(result.assets[0].uri);
+    }
+  };
   return (
     <SafeAreaView style={styles.container}>
       <CameraView
@@ -66,60 +114,153 @@ export default function UploadsPage() {
         mode="video"
         facing={facing}
         ref={cameraRef}
-        mirror={facing === "front"} // Use mirror prop directly for front camera
+        mirror={facing === "front"}
       >
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
-            <Text style={styles.text}>Flip</Text>
+          {/* Flip Button */}
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={toggleCameraFacing}
+          >
+            <Icon name="camera-reverse-outline" size={40} color="white" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={startRecording}>
-            <Text style={styles.text}>
-              {isRecording ? "Recording..." : "Record"}
-            </Text>
+
+          {/* Record Button */}
+          <TouchableOpacity style={styles.iconButton} onPress={startRecording}>
+            <Icon
+              name={
+                isRecording ? "stop-circle-outline" : "radio-button-on-outline"
+              }
+              size={40}
+              color={isRecording ? "red" : "white"}
+            />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={stopRecording}>
-            <Text style={styles.text}>Stop</Text>
+
+          {/* Stop Button */}
+          <TouchableOpacity style={styles.iconButton} onPress={stopRecording}>
+            <Icon name="stop-outline" size={40} color="white" />
           </TouchableOpacity>
         </View>
       </CameraView>
-      {videoUri && (
-        <View style={styles.videoContainer}>
-          <Text>Video saved at: {videoUri}</Text>
+
+      {/* Overlay/Modal for video preview */}
+      <Modal
+        visible={isModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <View style={styles.overlay}>
+          {videoUri && (
+            <>
+              <Video
+                ref={videoRef}
+                source={{ uri: videoUri }}
+                style={styles.previewVideo}
+                useNativeControls
+                resizeMode={ResizeMode.CONTAIN}
+                isLooping
+              />
+              <TouchableOpacity
+                style={styles.uploadButton}
+                onPress={uploadVideo}
+              >
+                <Text style={styles.text}>Upload</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setIsModalVisible(false)}
+              >
+                <Text style={styles.text}>Cancel</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
-      )}
+      </Modal>
+
+      {/* Album button */}
+      <TouchableOpacity style={styles.albumButton} onPress={pickMedia}>
+        <Image
+          source={{ uri: "https://img.icons8.com/ios/50/ffffff/albums.png" }}
+          style={styles.albumIcon}
+        />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
+    backgroundColor: "#000",
   },
   message: {
     textAlign: "center",
     paddingBottom: 10,
+    color: "white",
   },
   camera: {
     flex: 1,
   },
+  iconButton: {
+    marginHorizontal: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   buttonContainer: {
     flexDirection: "row",
-    backgroundColor: "transparent",
+    backgroundColor: "rgba(0, 0, 0, 0.25)",
     alignSelf: "center",
-    margin: 20,
+    padding: 10,
+    borderRadius: 8,
   },
   button: {
     flex: 1,
     alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: "#1E90FF",
+    marginHorizontal: 5,
+    borderRadius: 5,
   },
   text: {
     fontSize: 18,
     fontWeight: "bold",
     color: "white",
   },
-  videoContainer: {
-    padding: 16,
-    backgroundColor: "#fff",
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  previewVideo: {
+    width: "90%",
+    height: 300,
+    backgroundColor: "black",
+  },
+  uploadButton: {
+    backgroundColor: "#1E90FF",
+    padding: 15,
+    marginVertical: 10,
+    borderRadius: 10,
+  },
+  cancelButton: {
+    backgroundColor: "red",
+    padding: 15,
+    borderRadius: 10,
+  },
+  albumButton: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    backgroundColor: "#1E90FF",
+    padding: 10,
+    borderRadius: 30,
+  },
+  albumIcon: {
+    width: 30,
+    height: 30,
+    tintColor: "white",
   },
 });

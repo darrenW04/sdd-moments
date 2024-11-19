@@ -40,17 +40,21 @@ const SignupPage: React.FC = () => {
 
     if (valid) {
       try {
-        const response = await axios.post('http://192.168.6.61:3000/api/signup', {
-          email,
-          password,
-        });
-        console.log('Signup response:', response.data);
+        const response = await axios.post(
+          "http://192.168.6.42:3000/api/signup",
+          {
+            email,
+            password,
+          }
+        );
+        console.log("Signup response:", response.data);
         Alert.alert("Signup Successful", `Welcome ${email}!`);
         router.push("./home");
       } catch (err: any) {
-        console.error('Signup error:', err);
+        console.error("Signup error:", err);
         if (axios.isAxiosError(err) && err.response) {
-          const errorMessage = err.response.data?.message || "An unexpected error occurred";
+          const errorMessage =
+            err.response.data?.message || "An unexpected error occurred";
           Alert.alert("Signup Failed", errorMessage);
         } else {
           Alert.alert("Signup Failed", "Network Error");
@@ -84,7 +88,9 @@ const SignupPage: React.FC = () => {
         onChangeText={setPassword}
         autoCapitalize="none"
       />
-      {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+      {passwordError ? (
+        <Text style={styles.errorText}>{passwordError}</Text>
+      ) : null}
 
       <Text style={styles.label}>Confirm Password</Text>
       <TextInput

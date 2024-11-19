@@ -34,31 +34,39 @@ const LoginPage: React.FC = () => {
 
     if (valid) {
       try {
+        console.log("Sending login request with:", { email, password });
         const response = await axios.post(
-          "http://192.168.6.61:3000/api/login",
+          "http://192.168.6.42:3000/api/login",
           {
             email,
             password,
           }
         );
+        console.log("Response data:", response.data);
 
         if (response.data && response.data.user_id) {
-          // Store the user ID in AsyncStorage
+          // Store the user ID in AsyncStorage as currentUserId
           await AsyncStorage.setItem(
             "currentUserId",
             response.data.user_id.toString()
           );
+          console.log(
+            "Current user ID stored in AsyncStorage:",
+            response.data.user_id
+          );
+
           Alert.alert("Login Successful", `Welcome ${email}!`);
           router.push("./home");
         } else {
+          console.error("User ID not found in response");
           Alert.alert("Login Failed", "User ID not found in the response");
         }
       } catch (err: any) {
+        console.error("Login error:", err);
         if (axios.isAxiosError(err) && err.response) {
-          Alert.alert(
-            "Login Failed",
-            err.response.data?.message || "An unexpected error occurred"
-          );
+          const errorMessage =
+            err.response.data?.message || "An unexpected error occurred";
+          Alert.alert("Login Failed", errorMessage);
         } else {
           Alert.alert("Login Failed", "Network Error");
         }
@@ -68,6 +76,10 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  const handleDev = async () => {
+    //Push to home page
+    router.push("./home");
+  };
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
@@ -91,10 +103,15 @@ const LoginPage: React.FC = () => {
         onChangeText={setPassword}
         autoCapitalize="none"
       />
-      {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
+      {passwordError ? (
+        <Text style={styles.errorText}>{passwordError}</Text>
+      ) : null}
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Log In</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={handleDev}>
+        <Text style={styles.buttonText}>Dev</Text>
       </TouchableOpacity>
     </View>
   );

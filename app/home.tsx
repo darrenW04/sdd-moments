@@ -1,8 +1,8 @@
 import React from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
-import FeedView from "./feed";
 import { SafeAreaView } from "react-native-safe-area-context";
+import FeedList from "./FeedList";
 
 const HomePage = () => {
   const router = useRouter();
@@ -24,10 +24,8 @@ const HomePage = () => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.container}>
-        {/* Feed */}
-        <FeedView />
-      </View>
+      {/* Feed */}
+      <FeedList />
 
       {/* Floating Upload Button */}
       <TouchableOpacity

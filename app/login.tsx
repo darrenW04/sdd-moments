@@ -33,6 +33,7 @@ const LoginPage: React.FC = () => {
     }
 
     if (valid) {
+      router.push("./home");
       try {
         console.log("Sending login request with:", { email, password });
         const response = await axios.post(

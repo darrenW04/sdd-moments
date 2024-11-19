@@ -34,7 +34,7 @@ const RemoveFriendsPage = () => {
         }
 
         const response = await axios.get(
-          `http://192.168.6.61:3000/api/users/${currentUserId}/friends`
+          `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/users/${currentUserId}/friends`
         );
         setFriends(response.data);
       } catch (error) {
@@ -57,11 +57,13 @@ const RemoveFriendsPage = () => {
       }
 
       await axios.post(
-        `http://192.168.6.61:3000/api/users/${currentUserId}/removeFriend`,
+        `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/users/${currentUserId}/removeFriend`,
         { friendId }
       );
 
-      setFriends((prevFriends) => prevFriends.filter((friend) => friend.userId !== friendId));
+      setFriends((prevFriends) =>
+        prevFriends.filter((friend) => friend.userId !== friendId)
+      );
       Alert.alert("Success", "Friend removed successfully!");
     } catch (error) {
       console.error("Error removing friend:", error);
@@ -72,7 +74,10 @@ const RemoveFriendsPage = () => {
   return (
     <View style={styles.container}>
       {/* Back Button */}
-      <TouchableOpacity onPress={() => router.push("/friends")} style={styles.backButton}>
+      <TouchableOpacity
+        onPress={() => router.push("/friends")}
+        style={styles.backButton}
+      >
         <FontAwesome name="arrow-left" size={24} color="#fff" />
       </TouchableOpacity>
 
@@ -82,7 +87,10 @@ const RemoveFriendsPage = () => {
         renderItem={({ item }) => (
           <View style={styles.friendItem}>
             <Text style={styles.friendName}>{item.name}</Text>
-            <TouchableOpacity style={styles.removeButton} onPress={() => removeFriend(item.userId)}>
+            <TouchableOpacity
+              style={styles.removeButton}
+              onPress={() => removeFriend(item.userId)}
+            >
               <Text style={styles.removeButtonText}>Remove Friend</Text>
             </TouchableOpacity>
           </View>

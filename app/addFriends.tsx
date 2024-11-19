@@ -27,9 +27,12 @@ const AddFriendsPage = () => {
   const searchUsers = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`http://192.168.6.61:3000/api/users/search`, {
-        params: { query: searchQuery },
-      });
+      const response = await axios.get(
+        `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/users/search`,
+        {
+          params: { query: searchQuery },
+        }
+      );
       setResults(response.data); // Ensure your API returns an array of users
     } catch (error) {
       console.error("Error searching users:", error);
@@ -47,9 +50,12 @@ const AddFriendsPage = () => {
         return;
       }
 
-      await axios.post(`http://192.168.6.61:3000/api/users/${currentUserId}/addFriend`, {
-        friendId,
-      });
+      await axios.post(
+        `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/users/${currentUserId}/addFriend`,
+        {
+          friendId,
+        }
+      );
 
       Alert.alert("Success", "Friend request sent!");
     } catch (error) {
@@ -61,7 +67,10 @@ const AddFriendsPage = () => {
   return (
     <View style={styles.container}>
       {/* Back Button */}
-      <TouchableOpacity onPress={() => router.push("/friends")} style={styles.backButton}>
+      <TouchableOpacity
+        onPress={() => router.push("/friends")}
+        style={styles.backButton}
+      >
         <FontAwesome name="arrow-left" size={24} color="#fff" />
       </TouchableOpacity>
 
@@ -71,8 +80,14 @@ const AddFriendsPage = () => {
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
-      <TouchableOpacity style={styles.searchButton} onPress={searchUsers} disabled={loading}>
-        <Text style={styles.buttonText}>{loading ? "Searching..." : "Search"}</Text>
+      <TouchableOpacity
+        style={styles.searchButton}
+        onPress={searchUsers}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>
+          {loading ? "Searching..." : "Search"}
+        </Text>
       </TouchableOpacity>
       <FlatList
         data={results}
@@ -80,7 +95,10 @@ const AddFriendsPage = () => {
         renderItem={({ item }) => (
           <View style={styles.userItem}>
             <Text style={styles.username}>{item.username}</Text>
-            <TouchableOpacity style={styles.addButton} onPress={() => addFriend(item.userId)}>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => addFriend(item.userId)}
+            >
               <Text style={styles.addButtonText}>Add Friend</Text>
             </TouchableOpacity>
           </View>

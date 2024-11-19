@@ -36,7 +36,7 @@ const LoginPage: React.FC = () => {
       try {
         console.log("Sending login request with:", { email, password });
         const response = await axios.post(
-          "http://192.168.6.42:3000/api/login",
+          `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/login`,
           {
             email,
             password,

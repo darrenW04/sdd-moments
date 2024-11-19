@@ -37,7 +37,7 @@ const FriendsPage = () => {
         }
 
         const response = await axios.get(
-          `http://192.168.6.42:3000/api/users/${currentUserId}/friends-details`
+          `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/users/${currentUserId}/friends-details`
         );
 
         if (response.data) {

@@ -39,7 +39,7 @@ const FeedItem = ({ video, onLike }: FeedItemProps) => {
       console.log(video.likes);
 
       console.log("updating likes");
-      //   await axios.put(`http://192.168.6.42:3000/api/videos/${video._id}/like`, {
+      //   await axios.put(`http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/videos/${video._id}/like`, {
       //     action: "toggle",
       //   });
     } catch (error) {

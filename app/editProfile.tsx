@@ -34,7 +34,7 @@ const EditProfile = () => {
         setCurrentUserId(userId);
 
         const response = await axios.get(
-          `http://192.168.6.61:3000/api/users/${userId}`
+          `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/users/${userId}`
         );
         const { profile_picture, username, email } = response.data;
         setProfile({
@@ -58,7 +58,7 @@ const EditProfile = () => {
 
     try {
       const response = await axios.put(
-        `http://192.168.6.61:3000/api/users/${currentUserId}`,
+        `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/users/${currentUserId}`,
         profile
       );
       Alert.alert("Profile Updated", response.data.message);

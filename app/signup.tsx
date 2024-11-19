@@ -41,7 +41,7 @@ const SignupPage: React.FC = () => {
     if (valid) {
       try {
         const response = await axios.post(
-          "http://192.168.6.42:3000/api/signup",
+          `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/signup`,
           {
             email,
             password,

@@ -36,7 +36,7 @@ const ProfilePage = () => {
         }
 
         const response = await axios.get(
-          `http://192.168.6.42:3000/api/users/${currentUserId}`
+          `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/users/${currentUserId}`
         );
 
         if (response.data) {

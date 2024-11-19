@@ -28,7 +28,7 @@ const CreateProfile = () => {
       <Text style={styles.label}>Name</Text>
       <TextInput
         style={styles.input}
-        placeholder='Enter your name'
+        placeholder="Enter your name"
         value={name}
         onChangeText={setName}
       />
@@ -36,12 +36,12 @@ const CreateProfile = () => {
       <Text style={styles.label}>Bio</Text>
       <TextInput
         style={styles.input}
-        placeholder='Enter a bio'
+        placeholder="Enter a bio"
         value={bio}
         onChangeText={setBio}
       />
 
-      <Button title='Create Profile' onPress={handleCreateProfile} />
+      <Button title="Create Profile" onPress={handleCreateProfile} />
     </View>
   );
 };

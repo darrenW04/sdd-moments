@@ -10,7 +10,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FontAwesome } from "@expo/vector-icons"; // For the back icon
+import { FontAwesome } from "@expo/vector-icons";
 import axios from "axios";
 
 const EditProfile = () => {
@@ -24,7 +24,6 @@ const EditProfile = () => {
   });
 
   useEffect(() => {
-    // Load profile data from the server
     const loadProfile = async () => {
       try {
         const userId = await AsyncStorage.getItem("currentUserId");
@@ -58,13 +57,12 @@ const EditProfile = () => {
     }
 
     try {
-      // Send updated profile data to the server
       const response = await axios.put(
         `http://192.168.6.61:3000/api/users/${currentUserId}`,
         profile
       );
       Alert.alert("Profile Updated", response.data.message);
-      router.push("/profile"); // Navigate back to Profile page
+      router.push("/profile");
     } catch (error) {
       console.error("Error updating profile:", error);
       Alert.alert("Error", "There was an error saving your profile.");
@@ -86,6 +84,7 @@ const EditProfile = () => {
       <TextInput
         style={styles.input}
         placeholder="Enter avatar URL"
+        placeholderTextColor="#bbb"
         value={profile.avatar}
         onChangeText={(text) => setProfile({ ...profile, avatar: text })}
       />
@@ -95,6 +94,7 @@ const EditProfile = () => {
       <TextInput
         style={styles.input}
         placeholder="Enter your name"
+        placeholderTextColor="#bbb"
         value={profile.name}
         onChangeText={(text) => setProfile({ ...profile, name: text })}
       />
@@ -104,6 +104,7 @@ const EditProfile = () => {
       <TextInput
         style={styles.input}
         placeholder="Enter your email"
+        placeholderTextColor="#bbb"
         value={profile.email}
         onChangeText={(text) => setProfile({ ...profile, email: text })}
       />
@@ -120,7 +121,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#121212", // Dark background
   },
   backButton: {
     position: "absolute",
@@ -129,7 +130,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: "#007bff",
+    backgroundColor: "#1E90FF",
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1,
@@ -137,26 +138,28 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "bold",
+    color: "#FFFFFF",
     marginBottom: 20,
     textAlign: "center",
   },
   label: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
+    color: "#FFFFFF",
     marginBottom: 5,
   },
   input: {
     height: 40,
-    borderColor: "#ccc",
+    borderColor: "#333",
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 10,
     marginBottom: 15,
-    backgroundColor: "#fff",
+    backgroundColor: "#1A1A1A",
+    color: "#FFFFFF", // Input text color
   },
   saveButton: {
-    backgroundColor: "#007bff",
+    backgroundColor: "#1E90FF",
     paddingVertical: 12,
     paddingHorizontal: 30,
     borderRadius: 8,
@@ -164,7 +167,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   saveButtonText: {
-    color: "#fff",
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "bold",
   },

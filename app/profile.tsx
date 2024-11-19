@@ -64,7 +64,7 @@ const ProfilePage = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007bff" />
+        <ActivityIndicator size="large" color="#1E90FF" />
       </View>
     );
   }
@@ -137,7 +137,7 @@ const ProfilePage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#121212", // Dark background
   },
   loadingContainer: {
     flex: 1,
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: "#007bff",
+    backgroundColor: "#1E90FF",
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1,
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     marginBottom: 20,
     borderWidth: 2,
-    borderColor: "#007bff",
+    borderColor: "#1E90FF",
   },
   infoContainer: {
     alignItems: "center",
@@ -178,23 +178,24 @@ const styles = StyleSheet.create({
   username: {
     fontSize: 28,
     fontWeight: "bold",
+    color: "#FFFFFF", // White for dark mode
     marginBottom: 15,
   },
   email: {
     fontSize: 18,
-    color: "#333",
+    color: "#BBBBBB", // Lighter gray for email text
     marginBottom: 15,
   },
   info: {
     fontSize: 16,
-    color: "#666",
+    color: "#AAAAAA", // Gray for other info
     marginBottom: 10,
   },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     width: "80%",
-    marginBottom: 20, // Add spacing between button container and logout button
+    marginBottom: 20,
   },
   editButton: {
     backgroundColor: "#4CAF50",
@@ -204,26 +205,26 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   friendButton: {
-    backgroundColor: "#007bff",
+    backgroundColor: "#1E90FF",
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 10,
   },
   buttonText: {
-    color: "#fff",
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
   },
   logoutButton: {
-    backgroundColor: "#ff4d4d",
+    backgroundColor: "#FF4D4D",
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 10,
-    width: "80%", // Ensure the logout button is aligned with other buttons
+    width: "80%",
     alignItems: "center",
   },
   logoutButtonText: {
-    color: "#fff",
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
   },

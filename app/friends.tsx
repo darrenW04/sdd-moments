@@ -60,7 +60,7 @@ const FriendsPage = () => {
   if (loading) {
     return (
       <View style={styles.container}>
-        <Text>Loading...</Text>
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
@@ -97,6 +97,7 @@ const FriendsPage = () => {
       <TextInput
         style={styles.searchInput}
         placeholder="Search friends..."
+        placeholderTextColor="#bbb"
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
@@ -130,7 +131,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#121212", // Dark background
+  },
+  loadingText: {
+    color: "#fff",
+    textAlign: "center",
+    fontSize: 18,
   },
   backButton: {
     position: "absolute",
@@ -139,7 +145,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: "#007bff",
+    backgroundColor: "#1E90FF",
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1,
@@ -159,24 +165,26 @@ const styles = StyleSheet.create({
     right: 130,
     padding: 10,
     borderRadius: 8,
-    backgroundColor: "#ff4d4d",
+    backgroundColor: "#FF4D4D",
     zIndex: 1,
   },
   searchInput: {
     height: 40,
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#333",
+    backgroundColor: "#1A1A1A",
+    color: "#fff",
     paddingLeft: 10,
     borderRadius: 5,
     marginBottom: 20,
-    marginTop: 70, // Prevent overlap with buttons
+    marginTop: 70,
   },
   friendItem: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 20,
     padding: 10,
-    backgroundColor: "#fff",
+    backgroundColor: "#1A1A1A",
     borderRadius: 5,
   },
   friendDetails: {
@@ -191,10 +199,11 @@ const styles = StyleSheet.create({
   friendName: {
     fontSize: 18,
     fontWeight: "bold",
+    color: "#fff",
   },
   friendStatus: {
     fontSize: 14,
-    color: "#666",
+    color: "#bbb",
   },
   buttonText: {
     color: "#fff",

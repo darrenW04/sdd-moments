@@ -49,7 +49,7 @@ const LoginPage: React.FC = () => {
             response.data.user_id.toString()
           );
           Alert.alert("Login Successful", `Welcome ${email}!`);
-          router.push("./feed");
+          router.push("./home");
         } else {
           Alert.alert("Login Failed", "User ID not found in the response");
         }

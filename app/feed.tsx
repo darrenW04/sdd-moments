@@ -6,12 +6,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
-  Image,
 } from "react-native";
 import { WebView } from "react-native-webview";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome } from "@expo/vector-icons"; // Use '@expo/vector-icons' for Expo projects
 import axios from "axios";
-import { useRouter } from "expo-router";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -25,22 +23,22 @@ type Video = {
   isPublic: boolean;
   uploadTime: string;
   viewCount: number;
-  liked: boolean;
-  likes: number;
+  liked: boolean; // This property can be added to manage local state
+  likes: number; // Placeholder for like count, if needed
 };
 
 const FeedView = () => {
   const [videos, setVideos] = useState<Video[]>([]);
-  const router = useRouter();
 
   useEffect(() => {
+    // Fetch videos from the API
     const fetchVideos = async () => {
       try {
-        const response = await axios.get("http://192.168.6.61:3000/api/videos");
+        const response = await axios.get("http://192.168.6.61:3000/api/videos"); // Ensure this matches your server's IP and port
         const fetchedVideos = response.data.map((video: Video) => ({
           ...video,
-          liked: false,
-          likes: video.viewCount,
+          liked: false, // Default to not liked
+          likes: video.viewCount, // Use view count as a placeholder for likes
         }));
         setVideos(fetchedVideos);
       } catch (error) {
@@ -51,6 +49,7 @@ const FeedView = () => {
     fetchVideos();
   }, []);
 
+  // Function to handle like button press
   const handleLike = (videoId: string) => {
     setVideos((prevVideos) =>
       prevVideos.map((video) => {
@@ -65,27 +64,39 @@ const FeedView = () => {
         return video;
       })
     );
+
     updateLikesOnServer(videoId);
   };
 
+  // Placeholder for the PUT request to update likes
   const updateLikesOnServer = async (videoId: string) => {
+    // Implement the PUT request logic here
     console.log(`Updating likes on server for video ID: ${videoId}`);
   };
 
   const renderItem = ({ item }: { item: Video }) => (
     <View style={styles.postContainer}>
+      {/* User Info */}
       <Text style={styles.username}>{item.userId}</Text>
+
+      {/* Video */}
       <View style={styles.videoContainer}>
         <WebView
-          source={{ uri: item.videoUrl }}
+          source={{
+            uri: item.videoUrl,
+          }}
           style={styles.webview}
           allowsFullscreenVideo
           allowsInlineMediaPlayback
           mediaPlaybackRequiresUserAction={false}
         />
       </View>
+
+      {/* Title and Description */}
       <Text style={styles.caption}>{item.title}</Text>
       <Text style={styles.caption}>{item.description}</Text>
+
+      {/* Like Button */}
       <TouchableOpacity
         onPress={() => handleLike(item._id)}
         style={styles.likeButton}
@@ -101,63 +112,15 @@ const FeedView = () => {
   );
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Feed</Text>
-        <TouchableOpacity
-          onPress={() => router.push("./profile")}
-          style={styles.profileIconContainer}
-        >
-          <Image
-            source={{
-              uri: "https://via.placeholder.com/50", // Replace with user profile picture if available
-            }}
-            style={styles.profileIcon}
-          />
-        </TouchableOpacity>
-      </View>
-
-      <FlatList
-        data={videos}
-        keyExtractor={(item) => item._id}
-        renderItem={renderItem}
-      />
-    </View>
+    <FlatList
+      data={videos}
+      keyExtractor={(item) => item._id}
+      renderItem={renderItem}
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#121212",
-    paddingTop: 50,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: "#1a1a1a",
-    borderBottomWidth: 1,
-    borderBottomColor: "#333",
-  },
-  headerText: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  profileIconContainer: {
-    borderRadius: 25,
-    overflow: "hidden",
-  },
-  profileIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#ccc",
-  },
   postContainer: {
     padding: 16,
     backgroundColor: "#1a1a1a",
@@ -172,7 +135,7 @@ const styles = StyleSheet.create({
   },
   videoContainer: {
     width: "100%",
-    height: (screenWidth - 32) * (9 / 16),
+    height: (screenWidth - 32) * (9 / 16), // Adjust for 16:9 aspect ratio
     marginBottom: 8,
     borderRadius: 8,
     overflow: "hidden",

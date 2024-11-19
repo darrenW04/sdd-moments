@@ -34,7 +34,7 @@ const FeedView = () => {
     // Fetch videos from the API
     const fetchVideos = async () => {
       try {
-        const response = await axios.get("http://192.168.6.61:3000/api/videos"); // Ensure this matches your server's IP and port
+        const response = await axios.get("http://192.168.6.42:3000/api/videos"); // Ensure this matches your server's IP and port
         const fetchedVideos = response.data.map((video: Video) => ({
           ...video,
           liked: false, // Default to not liked

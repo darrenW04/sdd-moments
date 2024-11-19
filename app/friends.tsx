@@ -11,8 +11,8 @@ import {
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-import { FontAwesome } from "@expo/vector-icons"; // For back icon
+import { useRouter } from "expo-router";
+import { FontAwesome } from "@expo/vector-icons";
 
 type Friend = {
   userId: string;
@@ -25,7 +25,7 @@ const FriendsPage = () => {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
-  const navigation = useNavigation();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchFriendsDetails = async () => {
@@ -68,9 +68,26 @@ const FriendsPage = () => {
   return (
     <View style={styles.container}>
       <SafeAreaView edges={["top"]} />
+
       {/* Back Button */}
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+      <TouchableOpacity onPress={() => router.push("/profile")} style={styles.backButton}>
         <FontAwesome name="arrow-left" size={24} color="#fff" />
+      </TouchableOpacity>
+
+      {/* Add Friends Button */}
+      <TouchableOpacity
+        style={styles.addFriendsButton}
+        onPress={() => router.push("/addFriends")}
+      >
+        <Text style={styles.buttonText}>Add Friends</Text>
+      </TouchableOpacity>
+
+      {/* Remove Friends Button */}
+      <TouchableOpacity
+        style={styles.removeFriendsButton}
+        onPress={() => router.push("/removeFriends")}
+      >
+        <Text style={styles.buttonText}>Remove Friends</Text>
       </TouchableOpacity>
 
       {/* Search Bar */}
@@ -89,7 +106,7 @@ const FriendsPage = () => {
           <View style={styles.friendItem}>
             <Image
               source={{
-                uri: item.avatar || "https://via.placeholder.com/100", // Replace with your general profile icon URL if needed
+                uri: item.avatar || "https://via.placeholder.com/100",
               }}
               style={styles.avatar}
             />
@@ -97,9 +114,6 @@ const FriendsPage = () => {
               <Text style={styles.friendName}>{item.name}</Text>
               <Text style={styles.friendStatus}>{`Status: ${item.status}`}</Text>
             </View>
-            <TouchableOpacity style={styles.profileButton}>
-              <Text style={styles.profileButtonText}>View Profile</Text>
-            </TouchableOpacity>
           </View>
         )}
       />
@@ -125,6 +139,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     zIndex: 1,
   },
+  addFriendsButton: {
+    position: "absolute",
+    top: 70,
+    right: 10,
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: "#4CAF50",
+    zIndex: 1,
+  },
+  removeFriendsButton: {
+    position: "absolute",
+    top: 70,
+    right: 130,
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: "#ff4d4d",
+    zIndex: 1,
+  },
   searchInput: {
     height: 40,
     borderWidth: 1,
@@ -132,7 +164,7 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     borderRadius: 5,
     marginBottom: 20,
-    marginTop: 70, // Adjusted to prevent overlap with the back button
+    marginTop: 70, // Prevent overlap with buttons
   },
   friendItem: {
     flexDirection: "row",
@@ -159,14 +191,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
   },
-  profileButton: {
-    padding: 8,
-    backgroundColor: "#007bff",
-    borderRadius: 5,
-  },
-  profileButtonText: {
+  buttonText: {
     color: "#fff",
     fontSize: 14,
+    fontWeight: "600",
   },
 });
 

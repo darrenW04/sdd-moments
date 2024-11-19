@@ -33,6 +33,72 @@ async function connectToMongoDB() {
 
 connectToMongoDB();
 
+app.post("/api/users/:userId/add-friend", async (req, res) => {
+  const { userId } = req.params;
+  const { friendId } = req.body;
+
+  try {
+    await db
+      .collection("Users")
+      .updateOne({ user_id: userId }, { $push: { friends: { friend_user_id: friendId, status: "pending" } } });
+    res.status(200).send({ message: "Friend request sent!" });
+  } catch (error) {
+    res.status(500).send({ message: "Error adding friend." });
+  }
+});
+
+
+app.post("/api/users/:userId/remove-friend", async (req, res) => {
+  const { userId } = req.params;
+  const { friendId } = req.body;
+
+  try {
+    await db
+      .collection("Users")
+      .updateOne({ user_id: userId }, { $pull: { friends: { friend_user_id: friendId } } });
+    res.status(200).send({ message: "Friend removed!" });
+  } catch (error) {
+    res.status(500).send({ message: "Error removing friend." });
+  }
+});
+
+// Endpoint to fetch a user's friends
+app.get('/api/users/:userId/friends', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Find the current user by ID
+    const user = await db.collection('Users').findOne({ user_id: userId });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Extract the friends array from the user document
+    const friends = user.friends || [];
+
+    // Fetch details for each friend
+    const friendsDetails = await Promise.all(
+      friends.map(async (friend) => {
+        const friendDetails = await db.collection('Users').findOne({
+          user_id: friend.friend_user_id.toString(),
+        });
+
+        return {
+          userId: friend.friend_user_id,
+          name: friendDetails ? friendDetails.username : 'Unknown',
+        };
+      })
+    );
+
+    res.status(200).json(friendsDetails);
+  } catch (error) {
+    console.error('Error fetching friends:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
 
 // Update user profile
 app.put('/api/users/:userId', async (req, res) => {

@@ -1,5 +1,8 @@
 // import { Vimeo } from '@vimeo/player';
 import axios from "axios";
+import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
+import { Base64 } from "js-base64";
 
 const CLIENT_ID = "ce2269c67a4d363873de20f02b4a9cf47dc52722";
 const CLIENT_SECRET =
@@ -11,26 +14,117 @@ const ACCESS_TOKEN = "32277fd36fa4e8eb1f850797ffe557aa";
 // Put your own Vimeo access token
 
 // Function to get the video file size
-export const uploadVideoToVimeo = async (uri: string) => {
+// export const uploadVideoToVimeo = async (uri: string) => {
+//   try {
+//     const response = await axios.post("http://192.168.6.42:3000/api/vimeo", {
+//       filePath: uri,
+//     });
+//     console.log(
+//       "Video uploaded successfully. Video URI:",
+//       response.data.videoUri
+//     );
+//   } catch (error) {
+//     if (axios.isAxiosError(error)) {
+//       console.error(
+//         "Error uploading video:",
+//         error.response?.data || error.message
+//       );
+//     } else {
+//       console.error("Error uploading video:", error);
+//     }
+//   }
+// };
+export async function uploadVideoToVimeo(video: ImagePicker.ImagePickerResult) {
   try {
-    const response = await axios.post("http://192.168.6.42:3000/api/vimeo", {
-      filePath: uri,
+    if (!video.assets || video.assets.length === 0) {
+      throw new Error("No video asset found");
+    }
+
+    const fileInfo = video.assets[0];
+    const fileSize = fileInfo.fileSize; // Get file size in bytes
+    const videoUri = fileInfo.uri;
+
+    if (!fileSize || !videoUri) {
+      throw new Error("File size or URI is missing");
+    }
+
+    // Step 1: Copy file to a readable location
+    const tempFilePath = FileSystem.documentDirectory + "temp_video.mov";
+    await FileSystem.copyAsync({
+      from: videoUri,
+      to: tempFilePath,
     });
-    console.log(
-      "Video uploaded successfully. Video URI:",
-      response.data.videoUri
+
+    // Step 2: Create Vimeo upload session
+    const createResponse = await axios.post(
+      "https://api.vimeo.com/me/videos",
+      {
+        upload: {
+          approach: "tus",
+          size: fileSize.toString(),
+        },
+      },
+      {
+        headers: {
+          Authorization: `bearer ${VIMEO_ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+          Accept: "application/vnd.vimeo.*+json;version=3.4",
+        },
+      }
     );
+
+    const { upload_link: uploadLink, uri: vimeoVideoUri } =
+      createResponse.data.upload;
+
+    console.log("Vimeo Upload Link:", uploadLink);
+    console.log("Vimeo Video URI:", vimeoVideoUri);
+
+    // Step 3: Upload the video in chunks
+    let uploadOffset = 0;
+    const chunkSize = 5 * 1024 * 1024; // 5MB chunks
+
+    while (uploadOffset < fileSize) {
+      // Read the chunk as Base64
+      const base64Chunk = await FileSystem.readAsStringAsync(tempFilePath, {
+        encoding: FileSystem.EncodingType.Base64,
+        position: uploadOffset,
+        length: chunkSize,
+      });
+      const binaryChunk = Base64.toUint8Array(base64Chunk);
+      // Decode Base64 to binary Uint8Array
+
+      // Send binary data directly
+      const patchResponse = await axios.patch(uploadLink, binaryChunk, {
+        headers: {
+          "Tus-Resumable": "1.0.0",
+          "Upload-Offset": uploadOffset.toString(),
+          "Content-Type": "application/offset+octet-stream",
+        },
+      });
+
+      uploadOffset = parseInt(patchResponse.headers["upload-offset"], 10);
+      console.log(`Uploaded chunk: ${uploadOffset}/${fileSize}`);
+    }
+    const vimeoVideoUrl2 = createResponse.data?.uri;
+    const videoUrlData = createResponse.data.player_embed_url;
+    console.log(createResponse.data);
+    console.log("Upload complete. Video available at:", `${videoUrlData}`);
+    return `https://vimeo.com${vimeoVideoUri}`;
   } catch (error) {
     if (axios.isAxiosError(error)) {
       console.error(
-        "Error uploading video:",
+        "Error uploading to Vimeo:",
         error.response?.data || error.message
       );
     } else {
-      console.error("Error uploading video:", error);
+      if (error instanceof Error) {
+        console.error("Error uploading to Vimeo:", error.message);
+      } else {
+        console.error("Error uploading to Vimeo:", error);
+      }
     }
   }
-};
+}
 // // Function to get the size of the video file
 // const getVideoSize = async (uri: string) => {
 //   try {

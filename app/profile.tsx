@@ -115,14 +115,14 @@ const ProfilePage = () => {
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.editButton}
-            onPress={() => router.push("/editProfile")}
+            onPress={() => router.replace("/editProfile")}
           >
             <Text style={styles.buttonText}>Edit Profile</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.friendButton}
-            onPress={() => router.push("/friends")}
+            onPress={() => router.replace("/friends")}
           >
             <Text style={styles.buttonText}>Friends</Text>
           </TouchableOpacity>

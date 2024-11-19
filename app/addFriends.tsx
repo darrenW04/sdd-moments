@@ -68,7 +68,7 @@ const AddFriendsPage = () => {
     <View style={styles.container}>
       {/* Back Button */}
       <TouchableOpacity
-        onPress={() => router.push("/friends")}
+        onPress={() => router.replace("/friends")}
         style={styles.backButton}
       >
         <FontAwesome name="arrow-left" size={24} color="#fff" />

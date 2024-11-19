@@ -49,7 +49,7 @@ const SignupPage: React.FC = () => {
         );
         console.log("Signup response:", response.data);
         Alert.alert("Signup Successful", `Welcome ${email}!`);
-        router.push("./home");
+        router.replace("./home");
       } catch (err: any) {
         console.error("Signup error:", err);
         if (axios.isAxiosError(err) && err.response) {

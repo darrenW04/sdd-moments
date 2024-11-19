@@ -71,7 +71,7 @@ const FriendsPage = () => {
 
       {/* Back Button */}
       <TouchableOpacity
-        onPress={() => router.push("/profile")}
+        onPress={() => router.replace("/profile")}
         style={styles.backButton}
       >
         <FontAwesome name="arrow-left" size={24} color="#fff" />
@@ -80,7 +80,7 @@ const FriendsPage = () => {
       {/* Add Friends Button */}
       <TouchableOpacity
         style={styles.addFriendsButton}
-        onPress={() => router.push("/addFriends")}
+        onPress={() => router.replace("/addFriends")}
       >
         <Text style={styles.buttonText}>Add Friends</Text>
       </TouchableOpacity>
@@ -88,7 +88,7 @@ const FriendsPage = () => {
       {/* Remove Friends Button */}
       <TouchableOpacity
         style={styles.removeFriendsButton}
-        onPress={() => router.push("/removeFriends")}
+        onPress={() => router.replace("/removeFriends")}
       >
         <Text style={styles.buttonText}>Remove Friends</Text>
       </TouchableOpacity>

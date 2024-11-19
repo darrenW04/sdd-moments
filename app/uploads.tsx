@@ -15,6 +15,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library"; // Import MediaLibrary for saving videos
 import * as FileSystem from 'expo-file-system';
 import CameraRoll from '@react-native-camera-roll/camera-roll';
+import { uploadVideoToVimeo } from "./uploadVimeo";
 
 export default function UploadsPage() {
   const [facing, setFacing] = useState<CameraType>("back");
@@ -59,7 +60,10 @@ export default function UploadsPage() {
     });
 
     console.log(result);
-
+    if (result.assets) {
+      setVideoUri(result.assets[0].uri);
+      uploadVideoToVimeo(result);
+    }
     if (!result.canceled) {
       setImage(result.assets[0].uri);
     }

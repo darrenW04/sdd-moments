@@ -41,7 +41,7 @@ const HomePage = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#121212", // Dark background
   },
   header: {
     flexDirection: "row",
@@ -49,10 +49,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#333", // Divider for dark mode
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
+    color: "#FFFFFF", // White text for contrast
   },
   profilePicContainer: {
     borderRadius: 20,
@@ -62,7 +65,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#ccc",
+    backgroundColor: "#666", // Gray for placeholder
   },
   container: {
     flex: 1,
@@ -72,7 +75,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 30,
     alignSelf: "center",
-    backgroundColor: "#007BFF",
+    backgroundColor: "#1E88E5", // Bright blue for visibility
     width: 60,
     height: 60,
     borderRadius: 30,
@@ -82,10 +85,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
-    elevation: 5, // Adds shadow for Android
+    elevation: 5,
   },
   uploadButtonText: {
-    color: "#fff",
+    color: "#FFFFFF", // White text for button
     fontSize: 30,
     fontWeight: "bold",
   },

@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   Alert,
   Button,
-  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -13,8 +12,7 @@ import { Video, ResizeMode } from "expo-av"; // Import Video and ResizeMode comp
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library"; // Import MediaLibrary for saving videos
-import { CameraRoll } from "@react-native-camera-roll/camera-roll";
-import { PermissionsAndroid } from "react-native";
+
 export default function UploadsPage() {
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
@@ -103,42 +101,7 @@ export default function UploadsPage() {
       pickMedia();
     }
   };
-  async function saveVideoToCameraRoll(videoUri: string) {
-    try {
-      if (Platform.OS === "android") {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-          {
-            title: "Camera Roll Permission",
-            message:
-              "This app needs access to your camera roll to save videos.",
-            buttonNeutral: "Ask Me Later",
-            buttonNegative: "Cancel",
-            buttonPositive: "OK",
-          }
-        );
 
-        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          Alert.alert(
-            "Permission required",
-            "Please grant storage permissions."
-          );
-          return;
-        }
-      }
-
-      // Save the video to camera roll
-      CameraRoll.save(videoUri, { type: "video" });
-      Alert.alert("Success", "Video saved to camera roll successfully!", [
-        { text: "OK" },
-      ]);
-
-      // console.log("Saved video:", result);
-    } catch (error) {
-      console.error("Error saving video:", error);
-      Alert.alert("Error", "Failed to save the video to camera roll.");
-    }
-  }
   const downloadAndSaveVideo = async () => {
     try {
       if (videoUri === null) {
@@ -246,7 +209,7 @@ export default function UploadsPage() {
           <TouchableOpacity
             style={styles.button2}
             onPress={() => {
-              saveVideoToCameraRoll(videoUri);
+              downloadAndSaveVideo();
             }}
           >
             <Text style={styles.text}>Save</Text>

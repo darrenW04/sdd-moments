@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,35 +6,35 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-} from "react-native";
-import { useRouter } from "expo-router";
-import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 const LoginPage: React.FC = () => {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   const handleLogin = async () => {
-    setEmailError("");
-    setPasswordError("");
+    setEmailError('');
+    setPasswordError('');
 
     let valid = true;
     if (!email) {
-      setEmailError("Email is required");
+      setEmailError('Email is required');
       valid = false;
     }
     if (!password) {
-      setPasswordError("Password is required");
+      setPasswordError('Password is required');
       valid = false;
     }
 
     if (valid) {
-      router.push("./home");
+      router.push('./home');
       try {
         console.log('Sending login request with:', { email, password });
         const response = await axios.post('http://129.161.71.227:3000/api/login', {
@@ -48,23 +48,23 @@ const LoginPage: React.FC = () => {
           await AsyncStorage.setItem('currentUserId', response.data.user_id.toString());
           console.log('Current user ID stored in AsyncStorage:', response.data.user_id);
       
-          Alert.alert("Login Successful", `Welcome ${email}!`);
-          router.push("./home");
+          Alert.alert('Login Successful', `Welcome ${email}!`);
+          router.push('./home');
         } else {
           console.error('User ID not found in response');
-          Alert.alert("Login Failed", "User ID not found in the response");
+          Alert.alert('Login Failed', 'User ID not found in the response');
         }
       } catch (err: any) {
         console.error('Login error:', err);
         if (axios.isAxiosError(err) && err.response) {
-          const errorMessage = err.response.data?.message || "An unexpected error occurred";
-          Alert.alert("Login Failed", errorMessage);
+          const errorMessage = err.response.data?.message || 'An unexpected error occurred';
+          Alert.alert('Login Failed', errorMessage);
         } else {
-          Alert.alert("Login Failed", "Network Error");
+          Alert.alert('Login Failed', 'Network Error');
         }
       }         
     } else {
-      Alert.alert("Login Failed", "Please fill in all required fields");
+      Alert.alert('Login Failed', 'Please fill in all required fields');
     }
   };
 
@@ -74,22 +74,22 @@ const LoginPage: React.FC = () => {
       <Text style={styles.label}>Email</Text>
       <TextInput
         style={styles.input}
-        placeholder="Email"
-        keyboardType="email-address"
+        placeholder='Email'
+        keyboardType='email-address'
         value={email}
         onChangeText={setEmail}
-        autoCapitalize="none"
+        autoCapitalize='none'
       />
       {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
       <Text style={styles.label}>Password</Text>
       <TextInput
         style={styles.input}
-        placeholder="Password"
+        placeholder='Password'
         secureTextEntry
         value={password}
         onChangeText={setPassword}
-        autoCapitalize="none"
+        autoCapitalize='none'
       />
       {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
 
@@ -103,24 +103,24 @@ const LoginPage: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: 'center',
     padding: 16,
-    backgroundColor: "#ffffff",
+    backgroundColor: '#ffffff',
   },
   title: {
     fontSize: 28,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     marginBottom: 20,
-    textAlign: "center",
+    textAlign: 'center',
   },
   label: {
     fontSize: 16,
     marginBottom: 5,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   input: {
     height: 50,
-    borderColor: "#ccc",
+    borderColor: '#ccc',
     borderWidth: 1,
     marginBottom: 10,
     borderRadius: 5,
@@ -128,22 +128,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   errorText: {
-    color: "red",
+    color: 'red',
     fontSize: 14,
     marginBottom: 10,
   },
   button: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: '#4CAF50',
     height: 50,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     borderRadius: 5,
     marginTop: 10,
   },
   buttonText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
 });
 

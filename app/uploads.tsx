@@ -1,10 +1,10 @@
-import React, { useState, useRef } from "react";
-import { Button, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React, { useState, useRef } from 'react';
+import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function UploadsPage() {
-  const [facing, setFacing] = useState<CameraType>("back");
+  const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
   const [isRecording, setIsRecording] = useState(false);
   const [videoUri, setVideoUri] = useState<string | null>(null);
@@ -20,7 +20,7 @@ export default function UploadsPage() {
         <Text style={styles.message}>
           We need your permission to show the camera
         </Text>
-        <Button onPress={requestPermission} title="Grant Permission" />
+        <Button onPress={requestPermission} title='Grant Permission' />
       </View>
     );
   }
@@ -29,18 +29,18 @@ export default function UploadsPage() {
     if (cameraRef.current && !isRecording) {
       setIsRecording(true);
       try {
-        console.log("Start recording...");
+        console.log('Start recording...');
         const recordedVideo = await cameraRef.current.recordAsync({
           maxDuration: 30, // max duration in seconds
           maxFileSize: 50 * 1024 * 1024, // max file size in bytes (50 MB)
         });
-        console.log("Recorded video:", recordedVideo);
+        console.log('Recorded video:', recordedVideo);
         if (recordedVideo?.uri) {
           setVideoUri(recordedVideo.uri);
-          console.log("Recorded video URI:", recordedVideo.uri);
+          console.log('Recorded video URI:', recordedVideo.uri);
         }
       } catch (error) {
-        console.error("Error recording video:", error);
+        console.error('Error recording video:', error);
       } finally {
         setIsRecording(false);
       }
@@ -49,24 +49,24 @@ export default function UploadsPage() {
 
   const stopRecording = () => {
     if (cameraRef.current && isRecording) {
-      console.log("Stop recording...", cameraRef.current);
+      console.log('Stop recording...', cameraRef.current);
       cameraRef.current.stopRecording();
       setIsRecording(false);
     }
   };
 
   const toggleCameraFacing = () => {
-    setFacing((prevFacing) => (prevFacing === "back" ? "front" : "back"));
+    setFacing((prevFacing) => (prevFacing === 'back' ? 'front' : 'back'));
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <CameraView
         style={styles.camera}
-        mode="video"
+        mode='video'
         facing={facing}
         ref={cameraRef}
-        mirror={facing === "front"} // Use mirror prop directly for front camera
+        mirror={facing === 'front'} // Use mirror prop directly for front camera
       >
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
@@ -74,7 +74,7 @@ export default function UploadsPage() {
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={startRecording}>
             <Text style={styles.text}>
-              {isRecording ? "Recording..." : "Record"}
+              {isRecording ? 'Recording...' : 'Record'}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={stopRecording}>
@@ -94,32 +94,32 @@ export default function UploadsPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: 'center',
   },
   message: {
-    textAlign: "center",
+    textAlign: 'center',
     paddingBottom: 10,
   },
   camera: {
     flex: 1,
   },
   buttonContainer: {
-    flexDirection: "row",
-    backgroundColor: "transparent",
-    alignSelf: "center",
+    flexDirection: 'row',
+    backgroundColor: 'transparent',
+    alignSelf: 'center',
     margin: 20,
   },
   button: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
   },
   text: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "white",
+    fontWeight: 'bold',
+    color: 'white',
   },
   videoContainer: {
     padding: 16,
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
   },
 });

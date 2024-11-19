@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-} from "react-native";
-import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { FontAwesome } from "@expo/vector-icons"; // For back icon
+} from 'react-native';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { FontAwesome } from '@expo/vector-icons'; // For back icon
 
 type UserProfile = {
   username: string;
@@ -29,9 +29,9 @@ const ProfilePage = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const currentUserId = await AsyncStorage.getItem("currentUserId");
+        const currentUserId = await AsyncStorage.getItem('currentUserId');
         if (!currentUserId) {
-          console.error("Current user ID not found");
+          console.error('Current user ID not found');
           return;
         }
 
@@ -43,7 +43,7 @@ const ProfilePage = () => {
           setUserProfile(response.data);
         }
       } catch (error) {
-        console.error("Error fetching user profile:", error);
+        console.error('Error fetching user profile:', error);
       } finally {
         setLoading(false);
       }
@@ -55,7 +55,7 @@ const ProfilePage = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007bff" />
+        <ActivityIndicator size='large' color='#007bff' />
       </View>
     );
   }
@@ -70,17 +70,17 @@ const ProfilePage = () => {
 
   return (
     <View style={styles.container}>
-      <SafeAreaView edges={["top"]} />
+      <SafeAreaView edges={['top']} />
       {/* Back Button */}
       <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-        <FontAwesome name="arrow-left" size={24} color="#fff" />
+        <FontAwesome name='arrow-left' size={24} color='#fff' />
       </TouchableOpacity>
 
       {/* Centered Profile Section */}
       <View style={styles.profileSection}>
         <Image
           source={{
-            uri: userProfile.profile_picture || "https://via.placeholder.com/150",
+            uri: userProfile.profile_picture || 'https://via.placeholder.com/150',
           }}
           style={styles.avatar}
         />
@@ -98,14 +98,14 @@ const ProfilePage = () => {
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.editButton}
-            onPress={() => router.push("/editProfile")}
+            onPress={() => router.push('/editProfile')}
           >
             <Text style={styles.buttonText}>Edit Profile</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.friendButton}
-            onPress={() => router.push("/friends")}
+            onPress={() => router.push('/friends')}
           >
             <Text style={styles.buttonText}>Friends</Text>
           </TouchableOpacity>
@@ -118,29 +118,29 @@ const ProfilePage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: '#f0f0f0',
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   backButton: {
-    position: "absolute",
+    position: 'absolute',
     top: 65,
     left: 10,
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: "#007bff",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: '#007bff',
+    justifyContent: 'center',
+    alignItems: 'center',
     zIndex: 1,
   },
   profileSection: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: 20,
     marginTop: -100, 
   },
@@ -150,53 +150,53 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     marginBottom: 20,
     borderWidth: 2,
-    borderColor: "#007bff",
+    borderColor: '#007bff',
   },
   infoContainer: {
-    alignItems: "center",
+    alignItems: 'center',
     marginBottom: 30,
   },
   username: {
     fontSize: 28,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     marginBottom: 15,
   },
   email: {
     fontSize: 18,
-    color: "#333",
+    color: '#333',
     marginBottom: 15,
   },
   info: {
     fontSize: 16,
-    color: "#666",
+    color: '#666',
     marginBottom: 10,
   },
   buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "80%",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '80%',
   },
   editButton: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: '#4CAF50',
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 10,
     marginRight: 10,
   },
   friendButton: {
-    backgroundColor: "#007bff",
+    backgroundColor: '#007bff',
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 10,
   },
   buttonText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   errorText: {
     fontSize: 18,
-    color: "red",
+    color: 'red',
   },
 });
 

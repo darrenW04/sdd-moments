@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import LoginPage from "./login";
-import SignupPage from "./signup";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useState } from 'react';
+import LoginPage from './login';
+import SignupPage from './signup';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 export default function Index() {
   const [isLogin, setIsLogin] = useState(true); // State to toggle between login and signup
@@ -17,8 +17,8 @@ export default function Index() {
       <TouchableOpacity onPress={togglePage} style={styles.toggleButton}>
         <Text style={styles.toggleText}>
           {isLogin
-            ? "Don't have an account? Sign Up"
-            : "Already have an account? Sign In"}
+            ? 'Don't have an account? Sign Up'
+            : 'Already have an account? Sign In'}
         </Text>
       </TouchableOpacity>
     </View>
@@ -28,17 +28,17 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: 'center',
     padding: 16,
-    backgroundColor: "#ffffff",
+    backgroundColor: '#ffffff',
   },
   toggleButton: {
     marginTop: 20,
-    alignItems: "center",
+    alignItems: 'center',
   },
   toggleText: {
     fontSize: 16,
-    color: "#007BFF",
-    textDecorationLine: "underline",
+    color: '#007BFF',
+    textDecorationLine: 'underline',
   },
 });

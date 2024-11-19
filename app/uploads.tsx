@@ -7,11 +7,14 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+// import { RNFFmpeg } from 'react-native-ffmpeg';
 import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 import { Video, ResizeMode } from "expo-av"; // Import Video and ResizeMode components
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library"; // Import MediaLibrary for saving videos
+import * as FileSystem from 'expo-file-system';
+import CameraRoll from '@react-native-camera-roll/camera-roll';
 
 export default function UploadsPage() {
   const [facing, setFacing] = useState<CameraType>("back");
@@ -109,7 +112,7 @@ export default function UploadsPage() {
       }
       // Request media library permissions
       const { status } = await MediaLibrary.requestPermissionsAsync();
-      await MediaLibrary.getPermissionsAsync(true, ["video"]);
+    //   await MediaLibrary.getPermissionsAsync(true, ["video"]);
       if (status !== "granted") {
         Alert.alert(
           "Permission required",
@@ -117,20 +120,33 @@ export default function UploadsPage() {
         );
         return;
       }
-
+      
+      try {
+        // If the URI is a local file, you can directly save it.
+        const videoAsset = await MediaLibrary.createAssetAsync(videoUri);
+        await MediaLibrary.createAlbumAsync('MyVideos', videoAsset, false);
+        console.log('Video saved to gallery');
+      } catch (error) {
+        console.log('Error saving video to gallery:', error);
+      }
       // Rename the .mov file to .mp4
-      // const mp4Uri = videoUri.replace(".mov", ".mp4");
-      // await FileSystem.moveAsync({
-      //   from: videoUri,
-      //   to: mp4Uri,
-      // });
+    //   const mp4Uri = videoUri.replace(".mov", ".mp4");
+    //   await FileSystem.moveAsync({
+    //     from: videoUri,
+    //     to: mp4Uri,
+    //   });
+    //   console.log(mp4Uri);
+    //   await MediaLibrary.saveToLibraryAsync(mp4Uri);
 
+ 
+    
+
+    //   await MediaLibrary.saveToLibraryAsync(response.uri);
       // Save to camera roll
-      // const fileName = videoUri.replace(/^.*[\\\/]/, "");
-      // let imageFullPathInLocalStorage = FileSystem.documentDirectory + fileName;
-      // console.log(imageFullPathInLocalStorage);
-      console.log(videoUri);
-      await MediaLibrary.saveToLibraryAsync(videoUri);
+    //   const fileName = videoUri.replace(/^.*[\\\/]/, "");
+    //   let imageFullPathInLocalStorage = FileSystem.documentDirectory + fileName;
+    //   console.log(imageFullPathInLocalStorage);
+    //   await MediaLibrary.saveToLibraryAsync(imageFullPathInLocalStorage);
       Alert.alert("Success", "Video saved to camera roll successfully!");
     } catch (error) {
       console.error("Error saving video:", error);

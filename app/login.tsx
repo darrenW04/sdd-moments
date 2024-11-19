@@ -45,7 +45,6 @@ const LoginPage: React.FC = () => {
         console.log("Response data:", response.data);
 
         if (response.data && response.data.user_id) {
-          // Store the user ID in AsyncStorage as currentUserId
           await AsyncStorage.setItem(
             "currentUserId",
             response.data.user_id.toString()
@@ -77,9 +76,9 @@ const LoginPage: React.FC = () => {
   };
 
   const handleDev = async () => {
-    //Push to home page
     router.replace("./home");
   };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
@@ -87,6 +86,7 @@ const LoginPage: React.FC = () => {
       <TextInput
         style={styles.input}
         placeholder="Email"
+        placeholderTextColor="#888"
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
@@ -98,6 +98,7 @@ const LoginPage: React.FC = () => {
       <TextInput
         style={styles.input}
         placeholder="Password"
+        placeholderTextColor="#888"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
@@ -122,35 +123,39 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 16,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#121212", // Dark background color
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
     marginBottom: 20,
     textAlign: "center",
+    color: "#ffffff", // Light text color for dark mode
   },
   label: {
     fontSize: 16,
     marginBottom: 5,
     fontWeight: "bold",
+    color: "#ffffff", // Light text color for labels
   },
   input: {
     height: 50,
-    borderColor: "#ccc",
+    borderColor: "#333", // Darker border color for inputs
     borderWidth: 1,
     marginBottom: 10,
     borderRadius: 5,
     paddingHorizontal: 10,
     fontSize: 16,
+    color: "#ffffff", // Light text color for input
+    backgroundColor: "#222222", // Dark background for input fields
   },
   errorText: {
-    color: "red",
+    color: "#ff5252", // Bright red for errors
     fontSize: 14,
     marginBottom: 10,
   },
   button: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#6200ea", // Purple shade for button in dark mode
     height: 50,
     justifyContent: "center",
     alignItems: "center",
@@ -158,7 +163,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   buttonText: {
-    color: "#fff",
+    color: "#ffffff", // White text on buttons
     fontSize: 18,
     fontWeight: "bold",
   },

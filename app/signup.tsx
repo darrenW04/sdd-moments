@@ -72,6 +72,7 @@ const SignupPage: React.FC = () => {
       <TextInput
         style={styles.input}
         placeholder="Email"
+        placeholderTextColor="#888888"
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
@@ -83,6 +84,7 @@ const SignupPage: React.FC = () => {
       <TextInput
         style={styles.input}
         placeholder="Password"
+        placeholderTextColor="#888888"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
@@ -96,6 +98,7 @@ const SignupPage: React.FC = () => {
       <TextInput
         style={styles.input}
         placeholder="Confirm Password"
+        placeholderTextColor="#888888"
         secureTextEntry
         value={confirmPassword}
         onChangeText={setConfirmPassword}
@@ -117,11 +120,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 16,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#121212", // Dark background color
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
+    color: "#BB86FC", // Light purple color for title
     marginBottom: 20,
     textAlign: "center",
   },
@@ -129,23 +133,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 5,
     fontWeight: "bold",
+    color: "#ffffff", // White color for labels
   },
   input: {
     height: 50,
-    borderColor: "#ccc",
+    borderColor: "#333333", // Dark border color for inputs
     borderWidth: 1,
     marginBottom: 10,
     borderRadius: 5,
     paddingHorizontal: 10,
     fontSize: 16,
+    color: "#ffffff", // White text color in inputs
+    backgroundColor: "#1e1e1e", // Slightly lighter background for inputs
   },
   errorText: {
-    color: "red",
+    color: "#cf6679", // Red-ish color for error text in dark mode
     fontSize: 14,
     marginBottom: 10,
   },
   button: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#03DAC6", // Teal accent color for button
     height: 50,
     justifyContent: "center",
     alignItems: "center",
@@ -153,7 +160,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   buttonText: {
-    color: "#fff",
+    color: "#121212", // Dark color for button text for contrast
     fontSize: 18,
     fontWeight: "bold",
   },

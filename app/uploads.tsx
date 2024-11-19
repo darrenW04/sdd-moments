@@ -1,19 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
-  Alert,
-  Button,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Button, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 import { Video, ResizeMode } from "expo-av"; // Import Video and ResizeMode components
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library"; // Import MediaLibrary for saving videos
-import { uploadVideoToVimeo } from "./uploadVimeo";
-
+import { UploadCachedVideo, uploadVideoToVimeo } from "./uploadVimeo";
+import * as FileSystem from "expo-file-system";
 export default function UploadsPage() {
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
@@ -111,74 +104,12 @@ export default function UploadsPage() {
       if (videoUri === null) {
         return;
       }
-      // Request media library permissions
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      await MediaLibrary.getPermissionsAsync(true, ["video"]);
-      if (status !== "granted") {
-        Alert.alert(
-          "Permission required",
-          "Please grant media library permissions."
-        );
-        return;
-      }
-
-      // Rename the .mov file to .mp4
-      // const mp4Uri = videoUri.replace(".mov", ".mp4");
-      // await FileSystem.moveAsync({
-      //   from: videoUri,
-      //   to: mp4Uri,
-      // });
-
-      // Save to camera roll
-      // const fileName = videoUri.replace(/^.*[\\\/]/, "");
-      // let imageFullPathInLocalStorage = FileSystem.documentDirectory + fileName;
-      // console.log(imageFullPathInLocalStorage);
-      console.log(videoUri);
-      await MediaLibrary.saveToLibraryAsync(videoUri);
-      Alert.alert("Success", "Video saved to camera roll successfully!");
+      const fileInfo = await FileSystem.getInfoAsync(videoUri);
+      console.log("File Info:", fileInfo);
+      UploadCachedVideo(videoUri);
     } catch (error) {
-      console.error("Error saving video:", error);
-      Alert.alert("Error", "Failed to save the video to camera roll.");
+      console.error("Error getting file info:", error);
     }
-    // const { status } = await MediaLibrary.requestPermissionsAsync();
-    // if (status !== "granted") {
-    //   alert("Permission to access media library is required!");
-    //   return;
-    // }
-
-    // const videoUrl = "http://techslides.com/demos/sample-videos/small.mp4";
-    // const fileUri = FileSystem.documentDirectory + "small.mp4";
-
-    // const callback = (downloadProgress: FileSystem.DownloadProgressData) => {
-    //   const progress =
-    //     downloadProgress.totalBytesWritten /
-    //     downloadProgress.totalBytesExpectedToWrite;
-    //   setProgress(progress);
-    // };
-
-    // try {
-    //   const downloadResult = await FileSystem.createDownloadResumable(
-    //     videoUrl,
-    //     fileUri,
-    //     {},
-    //     callback
-    //   ).downloadAsync();
-
-    //   if (downloadResult) {
-    //     const { uri } = downloadResult;
-    //     console.log("Finished downloading to:", uri);
-
-    //     // Save directly to the media library
-    //     await MediaLibrary.saveToLibraryAsync(uri);
-    //     alert("Video saved to camera roll successfully!");
-    //   } else {
-    //     console.error("Download failed.");
-    //     alert("Failed to download the video.");
-    //   }
-    // } catch (error) {
-    //   console.error("Error downloading or saving video:", error);
-    //   alert("Failed to download or save the video.");
-    // }
   };
 
   return (

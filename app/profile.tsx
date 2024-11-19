@@ -11,7 +11,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FontAwesome } from "@expo/vector-icons"; // For back icon
+import { FontAwesome } from "@expo/vector-icons";
 
 type UserProfile = {
   username: string;
@@ -24,7 +24,7 @@ type UserProfile = {
 const ProfilePage = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter(); // Use router for navigation
+  const router = useRouter();
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -51,6 +51,15 @@ const ProfilePage = () => {
 
     fetchUserProfile();
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem("currentUserId");
+      router.replace("/login");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
 
   if (loading) {
     return (
@@ -110,6 +119,11 @@ const ProfilePage = () => {
             <Text style={styles.buttonText}>Friends</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Logout Button */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>Log Out</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -142,7 +156,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
-    marginTop: -100, 
+    marginTop: -50,
   },
   avatar: {
     width: 120,
@@ -175,6 +189,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     width: "80%",
+    marginBottom: 20, // Add spacing between button container and logout button
   },
   editButton: {
     backgroundColor: "#4CAF50",
@@ -190,6 +205,19 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  logoutButton: {
+    backgroundColor: "#ff4d4d",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    width: "80%", // Ensure the logout button is aligned with other buttons
+    alignItems: "center",
+  },
+  logoutButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",

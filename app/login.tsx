@@ -11,7 +11,6 @@ import { useRouter } from "expo-router";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-
 const LoginPage: React.FC = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -34,35 +33,36 @@ const LoginPage: React.FC = () => {
     }
 
     if (valid) {
-      router.push("./home");
       try {
-        console.log('Sending login request with:', { email, password });
-        const response = await axios.post('http://129.161.71.227:3000/api/login', {
-          email,
-          password,
-        });
-        console.log('Response data:', response.data);
-        
+        const response = await axios.post(
+          "http://192.168.6.61:3000/api/login",
+          {
+            email,
+            password,
+          }
+        );
+
         if (response.data && response.data.user_id) {
-          // Store the user ID in AsyncStorage as currentUserId
-          await AsyncStorage.setItem('currentUserId', response.data.user_id.toString());
-          console.log('Current user ID stored in AsyncStorage:', response.data.user_id);
-      
+          // Store the user ID in AsyncStorage
+          await AsyncStorage.setItem(
+            "currentUserId",
+            response.data.user_id.toString()
+          );
           Alert.alert("Login Successful", `Welcome ${email}!`);
-          router.push("./home");
+          router.push("./feed");
         } else {
-          console.error('User ID not found in response');
           Alert.alert("Login Failed", "User ID not found in the response");
         }
       } catch (err: any) {
-        console.error('Login error:', err);
         if (axios.isAxiosError(err) && err.response) {
-          const errorMessage = err.response.data?.message || "An unexpected error occurred";
-          Alert.alert("Login Failed", errorMessage);
+          Alert.alert(
+            "Login Failed",
+            err.response.data?.message || "An unexpected error occurred"
+          );
         } else {
           Alert.alert("Login Failed", "Network Error");
         }
-      }         
+      }
     } else {
       Alert.alert("Login Failed", "Please fill in all required fields");
     }
@@ -80,7 +80,7 @@ const LoginPage: React.FC = () => {
         onChangeText={setEmail}
         autoCapitalize="none"
       />
-      {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+      {emailError && <Text style={styles.errorText}>{emailError}</Text>}
 
       <Text style={styles.label}>Password</Text>
       <TextInput
@@ -91,7 +91,7 @@ const LoginPage: React.FC = () => {
         onChangeText={setPassword}
         autoCapitalize="none"
       />
-      {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+      {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Log In</Text>

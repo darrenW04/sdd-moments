@@ -17,6 +17,7 @@ type Video = {
   description: string;
   likes: number;
   liked: boolean;
+  uploadTime: string; // Ensure this field exists
 };
 
 const FeedList = () => {
@@ -24,16 +25,22 @@ const FeedList = () => {
   const [refreshing, setRefreshing] = useState(false); // For pull-to-refresh
 
   const fetchVideos = async () => {
-    console.log("fetching videos");
+    console.log("Fetching videos");
     try {
       const response = await axios.get(
         `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/videos`
       );
-      const fetchedVideos = response.data.map((video: Video) => ({
-        ...video,
-        liked: false,
-        likes: video.likes,
-      }));
+      const fetchedVideos = response.data
+        .map((video: Video) => ({
+          ...video,
+          liked: false,
+          likes: video.likes,
+        }))
+        .sort(
+          (a: Video, b: Video) =>
+            new Date(b.uploadTime).getTime() - new Date(a.uploadTime).getTime()
+        ); // Sort by uploadTime in descending order (most recent first)
+
       setVideos(fetchedVideos);
     } catch (error) {
       console.error("Error fetching videos:", error);
@@ -63,9 +70,9 @@ const FeedList = () => {
       }
     >
       {videos.length > 0 ? (
-        videos.map((video) => (
+        videos.map((video, index) => (
           <FeedItem
-            key={video._id}
+            key={index}
             video={video}
             onLike={function (videoId: string): void {
               throw new Error("Function not implemented.");

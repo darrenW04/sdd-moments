@@ -271,6 +271,7 @@ app.get("/api/videos", async (req, res) => {
       isPublic: video.is_public,
       uploadTime: video.upload_time,
       viewCount: video.view_count,
+      likes: video.likes,
     }));
 
     res.status(200).json(formattedVideos);

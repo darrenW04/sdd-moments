@@ -3,6 +3,7 @@ import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import { Base64 } from "js-base64";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 ("w2gw6E7aD3ptF2eZY5ASB4y5WeJPx3bzdTFk9yz1uD1W7KPRMRE726YthQnD/zSGkkFZo9efYmm4MbQ6jxHWJNnaj/zwR6BRGhoDpRjU7qdbF/ueIYeeaEAI6kIe48A8");
 const VIMEO_ACCESS_TOKEN = "32277fd36fa4e8eb1f850797ffe557aa";
@@ -15,7 +16,7 @@ export async function uploadVideoToVimeo(video: ImagePicker.ImagePickerResult) {
     }
 
     const fileInfo = video.assets[0];
-    const fileSize = fileInfo.fileSize; // Get file size in bytes
+    const fileSize = fileInfo.fileSize;
     const videoUri = fileInfo.uri;
 
     if (!fileSize || !videoUri) {
@@ -58,16 +59,13 @@ export async function uploadVideoToVimeo(video: ImagePicker.ImagePickerResult) {
     const chunkSize = 5 * 1024 * 1024; // 5MB chunks
 
     while (uploadOffset < fileSize) {
-      // Read the chunk as Base64
       const base64Chunk = await FileSystem.readAsStringAsync(tempFilePath, {
         encoding: FileSystem.EncodingType.Base64,
         position: uploadOffset,
         length: chunkSize,
       });
       const binaryChunk = Base64.toUint8Array(base64Chunk);
-      // Decode Base64 to binary Uint8Array
 
-      // Send binary data directly
       const patchResponse = await axios.patch(uploadLink, binaryChunk, {
         headers: {
           "Tus-Resumable": "1.0.0",
@@ -79,11 +77,37 @@ export async function uploadVideoToVimeo(video: ImagePicker.ImagePickerResult) {
       uploadOffset = parseInt(patchResponse.headers["upload-offset"], 10);
       console.log(`Uploaded chunk: ${uploadOffset}/${fileSize}`);
     }
-    const vimeoVideoUrl2 = createResponse.data?.uri;
-    const videoUrlData = createResponse.data.player_embed_url;
+
+    const vimeoVideoUrl = createResponse.data.player_embed_url;
+    console.log("Upload complete. Video available at:", vimeoVideoUrl);
+
+    // Step 4: Push the video to the database
+    const currentUserId = await AsyncStorage.getItem("currentUserId");
+    if (!currentUserId) {
+      throw new Error("Current user ID not found.");
+    }
     console.log(createResponse.data);
-    console.log("Upload complete. Video available at:", `${videoUrlData}`);
-    return `https://vimeo.com${vimeoVideoUri}`;
+    const videoDetails = {
+      video_id: createResponse.data.resource_key, // Extract video ID from Vimeo URI
+      user_id: currentUserId,
+      video_url: vimeoVideoUrl,
+      title: "New Video", // Placeholder title, can be customized
+      description: "Uploaded via app", // Placeholder description
+      is_public: true,
+      upload_time: createResponse.data.created_time,
+      view_count: 0,
+      likes: 0,
+      comments: [],
+    };
+
+    const databaseResponse = await axios.post(
+      `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/videos`,
+      videoDetails
+    );
+
+    console.log("Video pushed to database:", databaseResponse.data);
+
+    return vimeoVideoUrl;
   } catch (error) {
     if (axios.isAxiosError(error)) {
       console.error(
@@ -105,7 +129,7 @@ export async function UploadCachedVideo(videoUri: string) {
     const fileInfo = await FileSystem.getInfoAsync(videoUri);
     console.log("File Info:", fileInfo);
     const uri = fileInfo.uri;
-    const fileSize = fileInfo.size;
+    const fileSize = fileInfo.size; // Ignore this error line, THERES LITERALLY A .SIZE AND IT WORKS
     if (!uri || !fileSize) {
       throw new Error("File URI or size is missing.");
     }

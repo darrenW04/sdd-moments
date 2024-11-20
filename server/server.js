@@ -281,6 +281,29 @@ app.get("/api/videos", async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
+app.post("/api/videos", async (req, res) => {
+  try {
+    const video = req.body;
+
+    if (!video.user_id || !video.video_url || !video.upload_time) {
+      return res.status(400).json({
+        message: "Missing required fields: userId, videoUrl, or uploadTime",
+      });
+    }
+
+    const result = await db.collection("Videos").insertOne(video);
+
+    res.status(201).json({
+      message: "Video added successfully",
+      videoId: result.insertedId,
+    });
+  } catch (error) {
+    console.error("Error adding video:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 // Endpoint to add a comment to a specific video
 app.post("/api/videos/comments", async (req, res) => {
   try {

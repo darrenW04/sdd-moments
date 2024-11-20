@@ -66,6 +66,17 @@ const FeedItem = ({ video, onLike }: FeedItemProps) => {
     }))
   );
   const [newComment, setNewComment] = useState("");
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null); // Store current user's ID
+
+  // Fetch currentUserId
+  useEffect(() => {
+    const fetchCurrentUserId = async () => {
+      const userId = await AsyncStorage.getItem("currentUserId");
+      setCurrentUserId(userId);
+    };
+
+    fetchCurrentUserId();
+  }, []);
 
   // Fetch usernames for each comment userId
   useEffect(() => {
@@ -73,6 +84,13 @@ const FeedItem = ({ video, onLike }: FeedItemProps) => {
       try {
         const updatedComments = await Promise.all(
           comments.map(async (comment) => {
+            if (comment.userId === currentUserId) {
+              return {
+                ...comment,
+                username: "You", // If it's the current user, set "You"
+              };
+            }
+
             try {
               const { profile } = await fetchUserProfile(comment.userId);
               return {
@@ -98,19 +116,17 @@ const FeedItem = ({ video, onLike }: FeedItemProps) => {
     };
 
     fetchCommentUsernames();
-  }, [video.comments]);
+  }, [video.comments, currentUserId]);
 
   const handleAddComment = async () => {
-    const currentUserId = await AsyncStorage.getItem("currentUserId");
+    if (!newComment.trim() || !currentUserId) return;
 
-    if (!newComment.trim()) return;
-    console.log(video);
     try {
       const response = await axios.post(
         `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/videos/comments`,
         {
           videoId: video.videoId,
-          userId: currentUserId, // Replace with the current user's ID
+          userId: currentUserId,
           comment: newComment.trim(),
         }
       );
@@ -119,7 +135,7 @@ const FeedItem = ({ video, onLike }: FeedItemProps) => {
         setComments([
           ...comments,
           {
-            userId: currentUserId || "-1",
+            userId: currentUserId,
             comment: newComment.trim(),
             username: "You",
           },

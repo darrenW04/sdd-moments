@@ -15,8 +15,10 @@ import * as MediaLibrary from "expo-media-library";
 import { UploadCachedVideo, uploadVideoToVimeo } from "./uploadVimeo";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons as Icon } from "@expo/vector-icons";
+import { useRouter } from "expo-router"; // Assuming you're using expo-router
 
 export default function UploadsPage() {
+  const router = useRouter(); // Add this for navigation
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
   const [isRecording, setIsRecording] = useState(false);
@@ -90,6 +92,7 @@ export default function UploadsPage() {
       setIsModalVisible(false);
     }
   };
+
   const pickMedia = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["videos"],
@@ -107,6 +110,7 @@ export default function UploadsPage() {
       // setImage(result.assets[0].uri);
     }
   };
+
   return (
     <SafeAreaView style={styles.container}>
       <CameraView
@@ -177,7 +181,14 @@ export default function UploadsPage() {
           )}
         </View>
       </Modal>
-
+      {/* Back Button */}
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => router.replace("/home")}
+      >
+        <Icon name="arrow-back-outline" size={24} color="white" />
+        <Text style={styles.backButtonText}>Back</Text>
+      </TouchableOpacity>
       {/* Album button */}
       <TouchableOpacity style={styles.albumButton} onPress={pickMedia}>
         <Image
@@ -188,11 +199,28 @@ export default function UploadsPage() {
     </SafeAreaView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
     backgroundColor: "#000",
+  },
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    // position: "absolute",
+    top: 20,
+    left: 10,
+    // backgroundColor: "rgba(0, 0, 0, 0.5)",
+    padding: 10,
+    borderRadius: 8,
+    zIndex: 10,
+  },
+  backButtonText: {
+    marginLeft: 5,
+    color: "white",
+    fontSize: 16,
   },
   message: {
     textAlign: "center",
@@ -213,20 +241,6 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     padding: 10,
     borderRadius: 8,
-  },
-  button: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: "#1E90FF",
-    marginHorizontal: 5,
-    borderRadius: 5,
-  },
-  text: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "white",
   },
   overlay: {
     flex: 1,
@@ -262,5 +276,10 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     tintColor: "white",
+  },
+  text: {
+    color: "white",
+    fontSize: 16,
+    textAlign: "center",
   },
 });

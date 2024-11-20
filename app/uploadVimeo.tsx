@@ -4,6 +4,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import { Base64 } from "js-base64";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Alert } from "react-native";
 
 ("w2gw6E7aD3ptF2eZY5ASB4y5WeJPx3bzdTFk9yz1uD1W7KPRMRE726YthQnD/zSGkkFZo9efYmm4MbQ6jxHWJNnaj/zwR6BRGhoDpRjU7qdbF/ueIYeeaEAI6kIe48A8");
 const VIMEO_ACCESS_TOKEN = "32277fd36fa4e8eb1f850797ffe557aa";
@@ -106,7 +107,7 @@ export async function uploadVideoToVimeo(video: ImagePicker.ImagePickerResult) {
     );
 
     console.log("Video pushed to database:", databaseResponse.data);
-
+    Alert.alert("Video uploaded successfully!");
     return vimeoVideoUrl;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -184,10 +185,35 @@ export async function UploadCachedVideo(videoUri: string) {
       uploadOffset = parseInt(patchResponse.headers["upload-offset"], 10);
       console.log(`Uploaded chunk: ${uploadOffset}/${fileSize}`);
     }
-    const videoUrlData = createResponse.data.player_embed_url;
 
-    console.log("Upload complete. Video available at:", `${videoUrlData}`);
+    const vimeoVideoUrl = createResponse.data.player_embed_url;
 
+    // Step 4: Push the video to the database
+    const currentUserId = await AsyncStorage.getItem("currentUserId");
+    if (!currentUserId) {
+      throw new Error("Current user ID not found.");
+    }
+    console.log(createResponse.data);
+    const videoDetails = {
+      video_id: createResponse.data.resource_key, // Extract video ID from Vimeo URI
+      user_id: currentUserId,
+      video_url: vimeoVideoUrl,
+      title: "New Video", // Placeholder title, can be customized
+      description: "Uploaded via app", // Placeholder description
+      is_public: true,
+      upload_time: createResponse.data.created_time,
+      view_count: 0,
+      likes: 0,
+      comments: [],
+    };
+
+    const databaseResponse = await axios.post(
+      `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/videos`,
+      videoDetails
+    );
+
+    console.log("Video pushed to database:", databaseResponse.data);
+    Alert.alert("Video uploaded successfully!");
     return `https://vimeo.com${vimeoVideoUri}`;
   } catch (error) {
     if (axios.isAxiosError(error)) {

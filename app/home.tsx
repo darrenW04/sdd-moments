@@ -68,7 +68,7 @@ const HomePage = () => {
       {/* Floating Upload Button */}
       <TouchableOpacity
         style={styles.uploadButton}
-        onPress={() => router.push("./uploads")}
+        onPress={() => router.replace("./uploads")}
       >
         <Text style={styles.uploadButtonText}>+</Text>
       </TouchableOpacity>

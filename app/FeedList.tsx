@@ -42,7 +42,7 @@ const FeedList = () => {
           (a: Video, b: Video) =>
             new Date(b.uploadTime).getTime() - new Date(a.uploadTime).getTime()
         ); // Sort by uploadTime in descending order (most recent first)
-      console.log(fetchedVideos[1].comments);
+      //   console.log(fetchedVideos[1].comments);
       setVideos(fetchedVideos);
     } catch (error) {
       console.error("Error fetching videos:", error);

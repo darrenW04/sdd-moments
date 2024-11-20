@@ -7,12 +7,14 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
+  Modal,
 } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
+import FriendsProfilePage from "./FriendsProfilePage"; // Update the path to the correct location
+import { router } from "expo-router";
 
 type Friend = {
   userId: string;
@@ -25,7 +27,8 @@ const FriendsPage = () => {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null); // State for selected friend
+  const [isModalVisible, setIsModalVisible] = useState(false); // Modal visibility state
 
   useEffect(() => {
     const fetchFriendsDetails = async () => {
@@ -57,6 +60,16 @@ const FriendsPage = () => {
     friend.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const openModal = (userId: string) => {
+    setSelectedUserId(userId);
+    setIsModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setSelectedUserId(null);
+    setIsModalVisible(false);
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -71,26 +84,10 @@ const FriendsPage = () => {
 
       {/* Back Button */}
       <TouchableOpacity
-        onPress={() => router.replace("/profile")}
         style={styles.backButton}
+        onPress={() => router.replace("/profile")}
       >
         <FontAwesome name="arrow-left" size={24} color="#fff" />
-      </TouchableOpacity>
-
-      {/* Add Friends Button */}
-      <TouchableOpacity
-        style={styles.addFriendsButton}
-        onPress={() => router.replace("/addFriends")}
-      >
-        <Text style={styles.buttonText}>Add Friends</Text>
-      </TouchableOpacity>
-
-      {/* Remove Friends Button */}
-      <TouchableOpacity
-        style={styles.removeFriendsButton}
-        onPress={() => router.replace("/removeFriends")}
-      >
-        <Text style={styles.buttonText}>Remove Friends</Text>
       </TouchableOpacity>
 
       {/* Search Bar */}
@@ -107,7 +104,10 @@ const FriendsPage = () => {
         data={filteredFriends}
         keyExtractor={(item) => item.userId}
         renderItem={({ item }) => (
-          <View style={styles.friendItem}>
+          <TouchableOpacity
+            style={styles.friendItem}
+            onPress={() => openModal(item.userId)} // Open modal on press
+          >
             <Image
               source={{
                 uri: item.avatar || "https://via.placeholder.com/100",
@@ -116,13 +116,32 @@ const FriendsPage = () => {
             />
             <View style={styles.friendDetails}>
               <Text style={styles.friendName}>{item.name}</Text>
-              <Text
-                style={styles.friendStatus}
-              >{`Status: ${item.status}`}</Text>
+              <Text style={styles.friendStatus}>
+                {`Status: ${item.status}`}
+              </Text>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
       />
+
+      {/* Modal for Friend Profile */}
+      <Modal
+        visible={isModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={closeModal} // Close modal on back press
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+              <FontAwesome name="close" size={24} color="#1E90FF" />
+            </TouchableOpacity>
+            {selectedUserId && (
+              <FriendsProfilePage userId={selectedUserId} /> // Render the friend's profile
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -150,24 +169,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     zIndex: 1,
   },
-  addFriendsButton: {
-    position: "absolute",
-    top: 70,
-    right: 10,
-    padding: 10,
-    borderRadius: 8,
-    backgroundColor: "#4CAF50",
-    zIndex: 1,
-  },
-  removeFriendsButton: {
-    position: "absolute",
-    top: 70,
-    right: 130,
-    padding: 10,
-    borderRadius: 8,
-    backgroundColor: "#FF4D4D",
-    zIndex: 1,
-  },
   searchInput: {
     height: 40,
     borderWidth: 1,
@@ -175,9 +176,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#1A1A1A",
     color: "#fff",
     paddingLeft: 10,
+    marginLeft: 50,
     borderRadius: 5,
     marginBottom: 20,
-    marginTop: 70,
   },
   friendItem: {
     flexDirection: "row",
@@ -205,10 +206,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#bbb",
   },
-  buttonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+  },
+  modalContent: {
+    height: "50%",
+    width: "90%",
+    // backgroundColor: "#FFF",
+    borderRadius: 10,
+    // padding: 20,
+  },
+  closeButton: {
+    alignSelf: "flex-end",
+    padding: 5,
+  },
+  closeButtonText: {
+    fontSize: 16,
+    color: "#1E90FF",
   },
 });
 

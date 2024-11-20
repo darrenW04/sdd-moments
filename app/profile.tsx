@@ -175,13 +175,6 @@ const ProfilePage = () => {
               <Text style={styles.videoTitle}>{item.title}</Text>
               <Text style={styles.videoDescription}>{item.description}</Text>
               <Text>{`Views: ${item.viewCount}`}</Text>
-              {/* <TouchableOpacity
-                // onPress={() => router.push(item.videoUrl)}
-                style={styles.videoLink}
-              >
-                <Text style={styles.linkText}>Watch Video</Text>
-              </TouchableOpacity> */}
-              {/* Video */}
               <View style={styles.videoContainer}>
                 <WebView
                   source={{

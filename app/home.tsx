@@ -1,12 +1,46 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import FeedList from "./FeedList";
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+type UserProfile = {
+  username: string;
+  email: string;
+  profile_picture: string;
+  created_at: string;
+  friend_count: number;
+};
 const HomePage = () => {
   const router = useRouter();
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const currentUserId = await AsyncStorage.getItem("currentUserId");
+        if (!currentUserId) {
+          console.error("Current user ID not found");
+          return;
+        }
+
+        const [profileResponse] = await Promise.all([
+          axios.get(
+            `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/users/${currentUserId}`
+          ),
+        ]);
+
+        if (profileResponse.data) {
+          setUserProfile(profileResponse.data);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
       <View style={styles.header}>
@@ -18,7 +52,11 @@ const HomePage = () => {
           style={styles.profilePicContainer}
         >
           <Image
-            source={{ uri: "https://example.com/profile-pic.jpg" }} // Replace with actual URL or local image
+            source={{
+              uri:
+                userProfile?.profile_picture ||
+                "https://example.com/profile-pic.jpg",
+            }} // Replace with actual URL or local image
             style={styles.profilePic}
           />
         </TouchableOpacity>

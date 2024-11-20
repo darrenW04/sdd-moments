@@ -51,6 +51,7 @@ type FeedItemProps = {
     description: string;
     likes: number;
     liked: boolean;
+    uploadTime: string;
     comments: { userId: string; comment: string }[];
   };
   onLike: (videoId: string) => void;
@@ -149,7 +150,7 @@ const FeedItem = ({ video, onLike }: FeedItemProps) => {
 
   return (
     <View style={styles.postContainer}>
-      <Text style={styles.username}>{video.userId}</Text>
+      <Text style={styles.username}>{video.title}</Text>
       <View style={styles.videoContainer}>
         <WebView
           source={{ uri: video.videoUrl }}
@@ -159,7 +160,9 @@ const FeedItem = ({ video, onLike }: FeedItemProps) => {
           mediaPlaybackRequiresUserAction={false}
         />
       </View>
-      <Text style={styles.caption}>{video.title}</Text>
+      <Text style={styles.caption}>
+        {new Date(video.uploadTime).toLocaleString()}
+      </Text>
       <Text style={styles.caption}>{video.description}</Text>
       <TouchableOpacity
         onPress={() => onLike(video._id)}

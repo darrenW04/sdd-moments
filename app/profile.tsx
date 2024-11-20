@@ -51,7 +51,31 @@ const ProfilePage = () => {
 
     fetchUserProfile();
   }, []);
+  const filterVideosByUserId = (videos: any[], userId: string) => {
+    return videos.filter((video) => video.userId === userId);
+  };
 
+  const fetchedVideos = async () => {
+    try {
+      const currentUserId = await AsyncStorage.getItem("currentUserId");
+      if (!currentUserId) {
+        console.error("Current user ID not found");
+        return;
+      }
+      const response = await axios.get(
+        `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/videos`
+      ); // Ensure this matches your server's IP and port
+      console.log("Response data:", response.data);
+      // filterVideosByUserId(response.data, currentUserId);
+      console.log(
+        "Filtered videos:",
+        filterVideosByUserId(response.data, currentUserId)
+      );
+      return filterVideosByUserId(response.data, currentUserId);
+    } catch (error) {
+      console.error("Error fetching videos:", error);
+    }
+  };
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem("currentUserId");
@@ -131,6 +155,9 @@ const ProfilePage = () => {
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>Log Out</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.logoutButton} onPress={fetchedVideos}>
+          <Text style={styles.logoutButtonText}>VIDEOS </Text>
         </TouchableOpacity>
       </View>
     </View>

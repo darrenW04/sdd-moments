@@ -35,6 +35,7 @@ const LoginPage: React.FC = () => {
     if (valid) {
       try {
         console.log("Sending login request with:", { email, password });
+        console.log("Public IP Address:", process.env.EXPO_PUBLIC_IP_ADDRESS);
         const response = await axios.post(
           `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/login`,
           {

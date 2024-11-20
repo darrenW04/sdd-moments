@@ -208,6 +208,7 @@ app.get("/api/users/:userId", async (req, res) => {
       profile_picture: user.profile_picture,
       created_at: user.created_at,
       friend_count: user.friends ? user.friends.length : 0,
+      friends: user.friends || [],
     };
 
     res.status(200).json(userData);

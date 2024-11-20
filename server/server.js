@@ -272,11 +272,53 @@ app.get("/api/videos", async (req, res) => {
       uploadTime: video.upload_time,
       viewCount: video.view_count,
       likes: video.likes,
+      comments: video.comments || [], // Include comments if they exist, otherwise default to an empty array
     }));
 
     res.status(200).json(formattedVideos);
   } catch (error) {
     console.error("Error fetching videos:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+// Endpoint to add a comment to a specific video
+app.post("/api/videos/comments", async (req, res) => {
+  try {
+    console.log("Adding comment to video");
+    const { videoId, userId, comment } = req.body;
+    console.log(videoId, userId, comment);
+    if (!videoId || !userId || !comment) {
+      return res
+        .status(400)
+        .json({ message: "videoId, userId, and comment are required." });
+    }
+
+    // Push the new comment into the video's comments array
+    const result = await db.collection("Videos").updateOne(
+      { video_id: videoId },
+      {
+        $push: {
+          comments: {
+            userId,
+            comment,
+          },
+        },
+      }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({ message: "Video not found." });
+    }
+
+    res.status(200).json({
+      message: "Comment added successfully",
+      comment: {
+        userId,
+        comment,
+      },
+    });
+  } catch (error) {
+    console.error("Error adding comment:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });

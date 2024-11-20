@@ -1,49 +1,133 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
+  TextInput,
   TouchableOpacity,
   Dimensions,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { FontAwesome } from "@expo/vector-icons";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const screenWidth = Dimensions.get("window").width;
+const fetchUserProfile = async (userId: string) => {
+  try {
+    // Make the API calls concurrently
+    const [profileResponse, videoResponse] = await Promise.all([
+      axios.get(
+        `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/users/${userId}`
+      ),
+      axios.get(`http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/videos`),
+    ]);
 
+    // Extract profile data
+    const profile = profileResponse.data;
+
+    // Filter videos specific to the given userId
+    const filteredVideos = videoResponse.data.filter(
+      (video: any) => video.userId === userId
+    );
+
+    // Return the profile and videos as an object
+    return {
+      profile,
+      videos: filteredVideos,
+    };
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    throw error; // Re-throw the error for further handling if needed
+  }
+};
 type FeedItemProps = {
   video: {
     _id: string;
+    videoId: string;
     userId: string;
     videoUrl: string;
     title: string;
     description: string;
     likes: number;
     liked: boolean;
+    comments: { userId: string; comment: string }[];
   };
-  onLike: (videoId: string) => void; // Callback to parent
+  onLike: (videoId: string) => void;
 };
 
 const FeedItem = ({ video, onLike }: FeedItemProps) => {
   const [liked, setLiked] = useState(video.liked);
   const [likes, setLikes] = useState(video.likes);
+  const [comments, setComments] = useState(
+    video.comments.map((comment) => ({
+      ...comment,
+      username: "", // Placeholder for username
+    }))
+  );
+  const [newComment, setNewComment] = useState("");
 
-  const handleLike = async () => {
-    const isLiked = !liked;
-    setLiked(isLiked);
-    setLikes(isLiked ? likes + 1 : likes - 1);
-    onLike(video._id);
+  // Fetch usernames for each comment userId
+  useEffect(() => {
+    const fetchCommentUsernames = async () => {
+      try {
+        const updatedComments = await Promise.all(
+          comments.map(async (comment) => {
+            try {
+              const { profile } = await fetchUserProfile(comment.userId);
+              return {
+                ...comment,
+                username: profile.username,
+              };
+            } catch (error) {
+              console.error(
+                `Error fetching username for userId ${comment.userId}:`,
+                error
+              );
+              return {
+                ...comment,
+                username: "Unknown User", // Fallback if error occurs
+              };
+            }
+          })
+        );
+        setComments(updatedComments);
+      } catch (error) {
+        console.error("Error fetching usernames for comments:", error);
+      }
+    };
 
+    fetchCommentUsernames();
+  }, [video.comments]);
+
+  const handleAddComment = async () => {
+    const currentUserId = await AsyncStorage.getItem("currentUserId");
+
+    if (!newComment.trim()) return;
+    console.log(video);
     try {
-      console.log(video);
-      console.log(video.likes);
+      const response = await axios.post(
+        `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/videos/comments`,
+        {
+          videoId: video.videoId,
+          userId: currentUserId, // Replace with the current user's ID
+          comment: newComment.trim(),
+        }
+      );
 
-      console.log("updating likes");
-      //   await axios.put(`http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/videos/${video._id}/like`, {
-      //     action: "toggle",
-      //   });
+      if (response.status === 200) {
+        setComments([
+          ...comments,
+          {
+            userId: currentUserId || "-1",
+            comment: newComment.trim(),
+            username: "You",
+          },
+        ]);
+        setNewComment(""); // Clear the input field
+      }
     } catch (error) {
-      console.error("Error updating likes on server:", error);
+      console.error("Error adding comment:", error);
     }
   };
 
@@ -61,16 +145,45 @@ const FeedItem = ({ video, onLike }: FeedItemProps) => {
       </View>
       <Text style={styles.caption}>{video.title}</Text>
       <Text style={styles.caption}>{video.description}</Text>
-      <TouchableOpacity onPress={handleLike} style={styles.likeButton}>
+      <TouchableOpacity
+        onPress={() => onLike(video._id)}
+        style={styles.likeButton}
+      >
         <FontAwesome
           name={liked ? "heart" : "heart-o"}
           size={24}
           color={liked ? "#FF6347" : "#fff"}
         />
-        <Text style={styles.likes}>
-          {likes === undefined || likes === null ? 1 : likes}
-        </Text>
+        <Text style={styles.likes}>{likes}</Text>
       </TouchableOpacity>
+
+      {/* Comments Section */}
+      <View style={styles.commentsSection}>
+        <Text style={styles.commentsHeader}>Comments</Text>
+        {comments.map((comment, index) => (
+          <Text key={index} style={styles.comment}>
+            <Text style={styles.commentUser}>
+              {comment.username || "Loading..."}:{" "}
+            </Text>
+            {comment.comment}
+          </Text>
+        ))}
+        <View style={styles.commentInputContainer}>
+          <TextInput
+            style={styles.commentInput}
+            placeholder="Add a comment..."
+            placeholderTextColor="#BBB"
+            value={newComment}
+            onChangeText={setNewComment}
+          />
+          <TouchableOpacity
+            onPress={handleAddComment}
+            style={styles.postButton}
+          >
+            <Text style={styles.postButtonText}>Post</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 };
@@ -112,6 +225,49 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     marginLeft: 8,
+  },
+  commentsSection: {
+    marginTop: 16,
+  },
+  commentsHeader: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+    marginBottom: 5,
+  },
+  comment: {
+    fontSize: 14,
+    color: "#BBBBBB",
+    marginBottom: 5,
+  },
+  commentUser: {
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+  commentInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 10,
+  },
+  commentInput: {
+    flex: 1,
+    borderColor: "#333",
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 8,
+    color: "#FFFFFF",
+    backgroundColor: "#121212",
+    marginRight: 10,
+  },
+  postButton: {
+    backgroundColor: "#1E90FF",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 5,
+  },
+  postButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
   },
 });
 

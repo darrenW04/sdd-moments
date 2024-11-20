@@ -11,6 +11,7 @@ import axios from "axios";
 
 type Video = {
   _id: string;
+  videoId: string;
   userId: string;
   videoUrl: string;
   title: string;
@@ -18,6 +19,7 @@ type Video = {
   likes: number;
   liked: boolean;
   uploadTime: string; // Ensure this field exists
+  comments: any[]; // Ensure this field exists
 };
 
 const FeedList = () => {
@@ -40,7 +42,7 @@ const FeedList = () => {
           (a: Video, b: Video) =>
             new Date(b.uploadTime).getTime() - new Date(a.uploadTime).getTime()
         ); // Sort by uploadTime in descending order (most recent first)
-
+      console.log(fetchedVideos[1].comments);
       setVideos(fetchedVideos);
     } catch (error) {
       console.error("Error fetching videos:", error);
@@ -75,7 +77,7 @@ const FeedList = () => {
             key={index}
             video={video}
             onLike={function (videoId: string): void {
-              throw new Error("Function not implemented.");
+              console.log("not implemented, but would update likes on server");
             }}
           />
         ))

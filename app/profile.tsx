@@ -9,6 +9,7 @@ import {
   FlatList,
   ScrollView,
   Dimensions,
+  Alert,
 } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -34,6 +35,7 @@ type Video = {
   uploadTime: string;
   viewCount: number;
 };
+
 const screenWidth = Dimensions.get("window").width;
 
 const ProfilePage = () => {
@@ -80,6 +82,41 @@ const ProfilePage = () => {
     fetchUserProfile();
   }, []);
 
+  const handleDeleteVideo = async (videoId: string) => {
+    try {
+      const confirmDelete = await new Promise((resolve) => {
+        Alert.alert(
+          "Delete Video",
+          "Are you sure you want to delete this video?",
+          [
+            { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
+            {
+              text: "Delete",
+              style: "destructive",
+              onPress: () => resolve(true),
+            },
+          ]
+        );
+      });
+
+      if (!confirmDelete) return;
+
+      await axios.delete(
+        `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/videos/${videoId}`
+      );
+
+      // Remove the video from the local state
+      setVideos((prevVideos) =>
+        prevVideos.filter((video) => video.videoId !== videoId)
+      );
+
+      Alert.alert("Success", "Video deleted successfully.");
+    } catch (error) {
+      console.error("Error deleting video:", error);
+      Alert.alert("Error", "An error occurred while deleting the video.");
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem("currentUserId");
@@ -108,7 +145,6 @@ const ProfilePage = () => {
   return (
     <View style={styles.container}>
       <SafeAreaView edges={["top"]} />
-      {/* Fixed Back Button */}
       <TouchableOpacity
         onPress={() => router.replace("/home")}
         style={styles.backButton}
@@ -116,9 +152,7 @@ const ProfilePage = () => {
         <FontAwesome name="arrow-left" size={24} color="#fff" />
       </TouchableOpacity>
 
-      {/* Scrollable Content */}
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Centered Profile Section */}
         <View style={styles.profileSection}>
           <Image
             source={{
@@ -128,7 +162,6 @@ const ProfilePage = () => {
             }}
             style={styles.avatar}
           />
-
           <View style={styles.infoContainer}>
             <Text style={styles.username}>{userProfile.username}</Text>
             <Text style={styles.email}>{`Email: ${userProfile.email}`}</Text>
@@ -141,8 +174,6 @@ const ProfilePage = () => {
               ).toLocaleString()}`}
             </Text>
           </View>
-
-          {/* Buttons */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={styles.editButton}
@@ -150,7 +181,6 @@ const ProfilePage = () => {
             >
               <Text style={styles.buttonText}>Edit Profile</Text>
             </TouchableOpacity>
-
             <TouchableOpacity
               style={styles.friendButton}
               onPress={() => router.replace("/friends")}
@@ -158,14 +188,10 @@ const ProfilePage = () => {
               <Text style={styles.buttonText}>Friends</Text>
             </TouchableOpacity>
           </View>
-
-          {/* Logout Button */}
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Text style={styles.logoutButtonText}>Log Out</Text>
           </TouchableOpacity>
         </View>
-
-        {/* Display Videos */}
         <Text style={styles.sectionHeader}>My Videos</Text>
         <FlatList
           data={videos}
@@ -173,7 +199,13 @@ const ProfilePage = () => {
           renderItem={({ item }) => (
             <View style={styles.videoCard}>
               <Text style={styles.videoTitle}>{item.title}</Text>
-              <Text style={styles.videoDescription}>{item.description}</Text>
+              <Text style={styles.videoDescription}>ID: {item.videoId}</Text>
+              <Text style={styles.videoDescription}>
+                Description: {item.description}
+              </Text>
+              <Text style={styles.videoDescription}>
+                Upload Time: {new Date(item.uploadTime).toLocaleString()}
+              </Text>
               <Text>{`Views: ${item.viewCount}`}</Text>
               <View style={styles.videoContainer}>
                 <WebView
@@ -186,9 +218,15 @@ const ProfilePage = () => {
                   mediaPlaybackRequiresUserAction={false}
                 />
               </View>
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => handleDeleteVideo(item.videoId)}
+              >
+                <Text style={styles.deleteButtonText}>Delete</Text>
+              </TouchableOpacity>
             </View>
           )}
-          scrollEnabled={false} // Disable FlatList's internal scrolling
+          scrollEnabled={false}
         />
       </ScrollView>
     </View>
@@ -204,6 +242,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  deleteButton: {
+    backgroundColor: "#FF4D4D",
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+    alignItems: "center",
+  },
+  deleteButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
   },
   backButton: {
     position: "absolute",

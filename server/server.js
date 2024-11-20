@@ -303,6 +303,29 @@ app.post("/api/videos", async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+// DELETE endpoint to delete a video
+app.delete("/api/videos/:videoId", async (req, res) => {
+  try {
+    const { videoId } = req.params;
+
+    if (!videoId) {
+      return res.status(400).json({ message: "Video ID is required." });
+    }
+
+    const result = await db
+      .collection("Videos")
+      .deleteOne({ video_id: videoId });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "Video not found." });
+    }
+
+    res.status(200).json({ message: "Video deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting video:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
 
 // Endpoint to add a comment to a specific video
 app.post("/api/videos/comments", async (req, res) => {

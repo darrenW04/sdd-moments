@@ -6,12 +6,16 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  FlatList,
+  ScrollView,
+  Dimensions,
 } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome } from "@expo/vector-icons";
+import WebView from "react-native-webview";
 
 type UserProfile = {
   username: string;
@@ -21,8 +25,20 @@ type UserProfile = {
   friend_count: number;
 };
 
+type Video = {
+  videoId: string;
+  title: string;
+  description: string;
+  videoUrl: string;
+  isPublic: boolean;
+  uploadTime: string;
+  viewCount: number;
+};
+const screenWidth = Dimensions.get("window").width;
+
 const ProfilePage = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -35,15 +51,27 @@ const ProfilePage = () => {
           return;
         }
 
-        const response = await axios.get(
-          `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/users/${currentUserId}`
-        );
+        const [profileResponse, videoResponse] = await Promise.all([
+          axios.get(
+            `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/users/${currentUserId}`
+          ),
+          axios.get(
+            `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/videos`
+          ),
+        ]);
 
-        if (response.data) {
-          setUserProfile(response.data);
+        if (profileResponse.data) {
+          setUserProfile(profileResponse.data);
+        }
+
+        if (videoResponse.data) {
+          const filteredVideos = videoResponse.data.filter(
+            (video: any) => video.userId === currentUserId
+          );
+          setVideos(filteredVideos);
         }
       } catch (error) {
-        console.error("Error fetching user profile:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
@@ -51,31 +79,7 @@ const ProfilePage = () => {
 
     fetchUserProfile();
   }, []);
-  const filterVideosByUserId = (videos: any[], userId: string) => {
-    return videos.filter((video) => video.userId === userId);
-  };
 
-  const fetchedVideos = async () => {
-    try {
-      const currentUserId = await AsyncStorage.getItem("currentUserId");
-      if (!currentUserId) {
-        console.error("Current user ID not found");
-        return;
-      }
-      const response = await axios.get(
-        `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/videos`
-      ); // Ensure this matches your server's IP and port
-      console.log("Response data:", response.data);
-      // filterVideosByUserId(response.data, currentUserId);
-      console.log(
-        "Filtered videos:",
-        filterVideosByUserId(response.data, currentUserId)
-      );
-      return filterVideosByUserId(response.data, currentUserId);
-    } catch (error) {
-      console.error("Error fetching videos:", error);
-    }
-  };
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem("currentUserId");
@@ -104,7 +108,7 @@ const ProfilePage = () => {
   return (
     <View style={styles.container}>
       <SafeAreaView edges={["top"]} />
-      {/* Back Button */}
+      {/* Fixed Back Button */}
       <TouchableOpacity
         onPress={() => router.replace("/home")}
         style={styles.backButton}
@@ -112,54 +116,88 @@ const ProfilePage = () => {
         <FontAwesome name="arrow-left" size={24} color="#fff" />
       </TouchableOpacity>
 
-      {/* Centered Profile Section */}
-      <View style={styles.profileSection}>
-        <Image
-          source={{
-            uri:
-              userProfile.profile_picture || "https://via.placeholder.com/150",
-          }}
-          style={styles.avatar}
+      {/* Scrollable Content */}
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Centered Profile Section */}
+        <View style={styles.profileSection}>
+          <Image
+            source={{
+              uri:
+                userProfile.profile_picture ||
+                "https://via.placeholder.com/150",
+            }}
+            style={styles.avatar}
+          />
+
+          <View style={styles.infoContainer}>
+            <Text style={styles.username}>{userProfile.username}</Text>
+            <Text style={styles.email}>{`Email: ${userProfile.email}`}</Text>
+            <Text style={styles.info}>
+              {`Friends: ${userProfile.friend_count}`}
+            </Text>
+            <Text style={styles.info}>
+              {`Account Created: ${new Date(
+                userProfile.created_at
+              ).toLocaleString()}`}
+            </Text>
+          </View>
+
+          {/* Buttons */}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => router.replace("/editProfile")}
+            >
+              <Text style={styles.buttonText}>Edit Profile</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.friendButton}
+              onPress={() => router.replace("/friends")}
+            >
+              <Text style={styles.buttonText}>Friends</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Logout Button */}
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutButtonText}>Log Out</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Display Videos */}
+        <Text style={styles.sectionHeader}>My Videos</Text>
+        <FlatList
+          data={videos}
+          keyExtractor={(item) => item.videoId}
+          renderItem={({ item }) => (
+            <View style={styles.videoCard}>
+              <Text style={styles.videoTitle}>{item.title}</Text>
+              <Text style={styles.videoDescription}>{item.description}</Text>
+              <Text>{`Views: ${item.viewCount}`}</Text>
+              {/* <TouchableOpacity
+                // onPress={() => router.push(item.videoUrl)}
+                style={styles.videoLink}
+              >
+                <Text style={styles.linkText}>Watch Video</Text>
+              </TouchableOpacity> */}
+              {/* Video */}
+              <View style={styles.videoContainer}>
+                <WebView
+                  source={{
+                    uri: item.videoUrl,
+                  }}
+                  style={styles.webview}
+                  allowsFullscreenVideo
+                  allowsInlineMediaPlayback
+                  mediaPlaybackRequiresUserAction={false}
+                />
+              </View>
+            </View>
+          )}
+          scrollEnabled={false} // Disable FlatList's internal scrolling
         />
-
-        <View style={styles.infoContainer}>
-          <Text style={styles.username}>{userProfile.username}</Text>
-          <Text style={styles.email}>{`Email: ${userProfile.email}`}</Text>
-          <Text
-            style={styles.info}
-          >{`Friends: ${userProfile.friend_count}`}</Text>
-          <Text style={styles.info}>
-            {`Account Created: ${new Date(
-              userProfile.created_at
-            ).toLocaleString()}`}
-          </Text>
-        </View>
-
-        {/* Buttons */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={() => router.replace("/editProfile")}
-          >
-            <Text style={styles.buttonText}>Edit Profile</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.friendButton}
-            onPress={() => router.replace("/friends")}
-          >
-            <Text style={styles.buttonText}>Friends</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Log Out</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.logoutButton} onPress={fetchedVideos}>
-          <Text style={styles.logoutButtonText}>VIDEOS </Text>
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
     </View>
   );
 };
@@ -186,12 +224,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     zIndex: 1,
   },
+  scrollContent: {
+    paddingBottom: 20, // Add spacing for scrolling
+  },
   profileSection: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
-    marginTop: -50,
+    marginTop: 80,
   },
   avatar: {
     width: 120,
@@ -208,17 +248,17 @@ const styles = StyleSheet.create({
   username: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#FFFFFF", // White for dark mode
+    color: "#FFFFFF",
     marginBottom: 15,
   },
   email: {
     fontSize: 18,
-    color: "#BBBBBB", // Lighter gray for email text
+    color: "#BBBBBB",
     marginBottom: 15,
   },
   info: {
     fontSize: 16,
-    color: "#AAAAAA", // Gray for other info
+    color: "#AAAAAA",
     marginBottom: 10,
   },
   buttonContainer: {
@@ -258,9 +298,56 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  sectionHeader: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+    marginTop: 20,
+    textAlign: "center",
+  },
   errorText: {
     fontSize: 18,
-    color: "red",
+    color: "#FF4D4D",
+    textAlign: "center",
+    marginTop: 20,
+  },
+  videoCard: {
+    backgroundColor: "#1E1E1E",
+    padding: 15,
+    marginVertical: 8,
+    marginHorizontal: 16,
+    borderRadius: 10,
+  },
+  videoTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+    marginBottom: 5,
+  },
+  videoDescription: {
+    fontSize: 14,
+    color: "#BBBBBB",
+    marginBottom: 10,
+  },
+  videoLink: {
+    backgroundColor: "#1E90FF",
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 5,
+  },
+  linkText: {
+    color: "#FFFFFF",
+    textAlign: "center",
+  },
+  videoContainer: {
+    width: "100%",
+    height: (screenWidth - 32) * (9 / 16), // Adjust for 16:9 aspect ratio
+    marginBottom: 8,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  webview: {
+    flex: 1,
   },
 });
 

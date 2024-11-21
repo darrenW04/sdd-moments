@@ -282,6 +282,32 @@ app.get("/api/videos", async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+// Toggle video visibility
+app.put("/api/videos/:videoId/toggleVisibility", async (req, res) => {
+  try {
+    const { videoId } = req.params;
+
+    // Validate if videoId matches your expected format, e.g., MongoDB's ObjectId or a specific string format
+    const query = /^[0-9a-fA-F]{24}$/.test(videoId)
+      ? { _id: new ObjectId(videoId) }
+      : { video_id: videoId }; // Adjust for alternate ID format if necessary
+
+    // Toggle video visibility by inverting the current is_public value
+    const updateResult = await db
+      .collection("Videos")
+      .updateOne(query, [{ $set: { is_public: { $not: "$is_public" } } }]);
+
+    // Check if the video was found and updated
+    if (updateResult.matchedCount === 0) {
+      return res.status(404).json({ message: "Video not found" });
+    }
+    console.log(updateResult);
+    res.status(200).json({ message: "Video visibility toggled successfully" });
+  } catch (error) {
+    console.error("Error toggling video visibility:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 app.post("/api/videos", async (req, res) => {
   try {

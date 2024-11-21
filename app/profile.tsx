@@ -102,10 +102,9 @@ const ProfilePage = () => {
       if (!confirmDelete) return;
 
       await axios.delete(
-        `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/videos/${videoId}`
+        `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/videos/${videoId}/toggleVisibility`
       );
 
-      // Remove the video from the local state
       setVideos((prevVideos) =>
         prevVideos.filter((video) => video.videoId !== videoId)
       );
@@ -114,6 +113,33 @@ const ProfilePage = () => {
     } catch (error) {
       console.error("Error deleting video:", error);
       Alert.alert("Error", "An error occurred while deleting the video.");
+    }
+  };
+
+  // Function to toggle video visibility
+  const toggleVideoVisibility = async (videoId: string) => {
+    try {
+      const response = await axios.put(
+        `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/videos/${videoId}/toggleVisibility`
+      );
+
+      // Check the response to ensure it's correctly toggled
+      const updatedVisibility = response.data.isPublic;
+
+      // Update the video visibility in the state
+      setVideos((prevVideos) =>
+        prevVideos.map((video) =>
+          video.videoId === videoId
+            ? { ...video, isPublic: !video.isPublic } // Update with the new visibility state
+            : video
+        )
+      );
+
+      // Alert message based on the updated visibility status
+      Alert.alert("Success video updated");
+    } catch (error) {
+      console.error("Error toggling video visibility:", error);
+      Alert.alert("Error", "An error occurred while updating visibility.");
     }
   };
 
@@ -199,25 +225,35 @@ const ProfilePage = () => {
           renderItem={({ item }) => (
             <View style={styles.videoCard}>
               <Text style={styles.videoTitle}>{item.title}</Text>
-              <Text style={styles.videoDescription}>ID: {item.videoId}</Text>
+              <Text>{`Views: ${item.viewCount}`}</Text>
               <Text style={styles.videoDescription}>
                 Description: {item.description}
               </Text>
               <Text style={styles.videoDescription}>
                 Upload Time: {new Date(item.uploadTime).toLocaleString()}
               </Text>
-              <Text>{`Views: ${item.viewCount}`}</Text>
               <View style={styles.videoContainer}>
                 <WebView
-                  source={{
-                    uri: item.videoUrl,
-                  }}
+                  source={{ uri: item.videoUrl }}
                   style={styles.webview}
                   allowsFullscreenVideo
-                  allowsInlineMediaPlayback
-                  mediaPlaybackRequiresUserAction={false}
                 />
               </View>
+
+              {/* Toggle visibility button */}
+              <TouchableOpacity
+                style={[
+                  styles.toggleVisibilityButton,
+                  item.isPublic ? styles.publicButton : styles.privateButton,
+                ]}
+                onPress={() => toggleVideoVisibility(item.videoId)}
+              >
+                <Text style={styles.toggleButtonText}>
+                  {item.isPublic ? "Set to Private" : "Set to Public"}
+                </Text>
+              </TouchableOpacity>
+
+              {/* Delete button */}
               <TouchableOpacity
                 style={styles.deleteButton}
                 onPress={() => handleDeleteVideo(item.videoId)}
@@ -390,6 +426,23 @@ const styles = StyleSheet.create({
   },
   webview: {
     flex: 1,
+  },
+  toggleVisibilityButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  publicButton: {
+    backgroundColor: "#4CAF50",
+  },
+  privateButton: {
+    backgroundColor: "#FF6347",
+  },
+  toggleButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
   },
 });
 

@@ -67,10 +67,19 @@ const ProfilePage = () => {
         }
 
         if (videoResponse.data) {
+          // Filter videos for the current user
           const filteredVideos = videoResponse.data.filter(
             (video: any) => video.userId === currentUserId
           );
-          setVideos(filteredVideos);
+
+          // Sort videos by uploadTime in descending order (most recent first)
+          const sortedVideos = filteredVideos.sort(
+            (a: any, b: any) =>
+              new Date(b.uploadTime).getTime() -
+              new Date(a.uploadTime).getTime()
+          );
+
+          setVideos(sortedVideos);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -225,7 +234,9 @@ const ProfilePage = () => {
           renderItem={({ item }) => (
             <View style={styles.videoCard}>
               <Text style={styles.videoTitle}>{item.title}</Text>
-              <Text>{`Views: ${item.viewCount}`}</Text>
+              <Text
+                style={{ color: "white" }}
+              >{`Views: ${item.viewCount}`}</Text>
               <Text style={styles.videoDescription}>
                 Description: {item.description}
               </Text>

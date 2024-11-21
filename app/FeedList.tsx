@@ -20,6 +20,7 @@ type Video = {
   liked: boolean;
   uploadTime: string; // Ensure this field exists
   comments: any[]; // Ensure this field exists
+  isPublic: boolean;
 };
 
 const FeedList = () => {
@@ -33,6 +34,7 @@ const FeedList = () => {
         `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/videos`
       );
       const fetchedVideos = response.data
+        .filter((video: Video) => video.isPublic) // Only include public videos
         .map((video: Video) => ({
           ...video,
           liked: false,
@@ -41,8 +43,7 @@ const FeedList = () => {
         .sort(
           (a: Video, b: Video) =>
             new Date(b.uploadTime).getTime() - new Date(a.uploadTime).getTime()
-        ); // Sort by uploadTime in descending order (most recent first)
-      //   console.log(fetchedVideos[1].comments);
+        ); // Sort by uploadTime in descending order
       setVideos(fetchedVideos);
     } catch (error) {
       console.error("Error fetching videos:", error);

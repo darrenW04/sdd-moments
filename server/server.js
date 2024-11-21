@@ -41,6 +41,113 @@ async function connectToMongoDB() {
 
 connectToMongoDB();
 
+
+app.post("/api/users/:userId/add-friend", async (req, res) => {
+  const { userId } = req.params;
+  const { friendId } = req.body;
+
+  if (!friendId) {
+    return res.status(400).json({ message: "Friend ID is required." });
+  }
+
+  try {
+    const user = await db.collection("Users").findOne({ user_id: userId });
+    const friend = await db.collection("Users").findOne({ user_id: friendId });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    if (!friend) {
+      return res.status(404).json({ message: "Friend not found." });
+    }
+
+    // Check if already friends
+    const isAlreadyFriend = user.friends.some(
+      (f) => f.friend_user_id === friendId
+    );
+
+    if (isAlreadyFriend) {
+      return res.status(400).json({ message: "Already friends." });
+    }
+
+    // Add friend to user's friends array
+    await db.collection("Users").updateOne(
+      { user_id: userId },
+      { $push: { friends: { friend_user_id: friendId, status: "accepted" } } }
+    );
+
+    res.status(200).json({ message: "Friend added successfully!" });
+  } catch (error) {
+    console.error("Error adding friend:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
+
+
+app.get("/api/users/search", async (req, res) => {
+  const { query } = req.query;
+
+  if (!query) {
+    return res.status(400).json({ message: "Query parameter is required." });
+  }
+
+  try {
+    const users = await db
+      .collection("Users")
+      .find({
+        username: { $regex: query, $options: "i" }, // Case-insensitive search
+      })
+      .project({ user_id: 1, username: 1, _id: 0 }) // Only return user_id and username
+      .toArray();
+
+    if (users.length === 0) {
+      return res.status(404).json({ message: "No users found." });
+    }
+
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Error searching users:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
+
+
+
+
+app.post("/api/users/:userId/remove-friend", async (req, res) => {
+  const { userId } = req.params; // This is the current user's ID
+  const { friendId } = req.body; // This is the ID of the friend to remove
+
+  console.log(`API Call to remove friend:`);
+  console.log(`User ID: ${userId}, Friend ID: ${friendId}`);
+
+  try {
+    const result = await db.collection("Users").updateOne(
+      { user_id: userId },
+      { $pull: { friends: { friend_user_id: friendId } } }
+    );
+
+    console.log("Update Result:", result);
+
+    if (result.modifiedCount === 0) {
+      console.log("No matching friend found to remove.");
+      return res
+        .status(404)
+        .json({ message: "Friend not found or already removed." });
+    }
+
+    console.log("Friend removed successfully.");
+    res.status(200).json({ message: "Friend removed successfully." });
+  } catch (error) {
+    console.error("Error removing friend:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
+
+
+
+
 // Vimeo upload endpoint
 app.post("/api/vimeo", async (req, res) => {
   console.log("Uploading video to Vimeo");
@@ -74,40 +181,6 @@ app.post("/api/vimeo", async (req, res) => {
   } catch (error) {
     console.error("Error uploading video to Vimeo:", error);
     res.status(500).json({ message: "Internal server error" });
-  }
-});
-
-app.post("/api/users/:userId/add-friend", async (req, res) => {
-  const { userId } = req.params;
-  const { friendId } = req.body;
-
-  try {
-    await db
-      .collection("Users")
-      .updateOne(
-        { user_id: userId },
-        { $push: { friends: { friend_user_id: friendId, status: "pending" } } }
-      );
-    res.status(200).send({ message: "Friend request sent!" });
-  } catch (error) {
-    res.status(500).send({ message: "Error adding friend." });
-  }
-});
-
-app.post("/api/users/:userId/remove-friend", async (req, res) => {
-  const { userId } = req.params;
-  const { friendId } = req.body;
-
-  try {
-    await db
-      .collection("Users")
-      .updateOne(
-        { user_id: userId },
-        { $pull: { friends: { friend_user_id: friendId } } }
-      );
-    res.status(200).send({ message: "Friend removed!" });
-  } catch (error) {
-    res.status(500).send({ message: "Error removing friend." });
   }
 });
 

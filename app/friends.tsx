@@ -13,7 +13,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome } from "@expo/vector-icons";
-import FriendsProfilePage from "./FriendsProfilePage"; // Update the path to the correct location
+import FriendsProfilePage from "./FriendsProfilePage";
 import { router } from "expo-router";
 
 type Friend = {
@@ -27,8 +27,8 @@ const FriendsPage = () => {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null); // State for selected friend
-  const [isModalVisible, setIsModalVisible] = useState(false); // Modal visibility state
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   useEffect(() => {
     const fetchFriendsDetails = async () => {
@@ -106,7 +106,7 @@ const FriendsPage = () => {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.friendItem}
-            onPress={() => openModal(item.userId)} // Open modal on press
+            onPress={() => openModal(item.userId)}
           >
             <Image
               source={{
@@ -124,12 +124,29 @@ const FriendsPage = () => {
         )}
       />
 
+      {/* Add and Remove Friends Buttons */}
+      <View style={styles.actionButtonsContainer}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => router.push("/addFriends")}
+        >
+          <Text style={styles.actionButtonText}>Add Friends</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.removeButton}
+          onPress={() => router.push("/removeFriends")}
+        >
+          <Text style={styles.actionButtonText}>Remove Friends</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Modal for Friend Profile */}
       <Modal
         visible={isModalVisible}
         animationType="slide"
         transparent={true}
-        onRequestClose={closeModal} // Close modal on back press
+        onRequestClose={closeModal}
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -137,7 +154,7 @@ const FriendsPage = () => {
               <FontAwesome name="close" size={24} color="#1E90FF" />
             </TouchableOpacity>
             {selectedUserId && (
-              <FriendsProfilePage userId={selectedUserId} /> // Render the friend's profile
+              <FriendsProfilePage userId={selectedUserId} />
             )}
           </View>
         </View>
@@ -150,7 +167,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#121212", // Dark background
+    backgroundColor: "#121212",
   },
   loadingText: {
     color: "#fff",
@@ -176,9 +193,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#1A1A1A",
     color: "#fff",
     paddingLeft: 10,
-    marginLeft: 50,
     borderRadius: 5,
     marginBottom: 20,
+    marginTop: 60,
   },
   friendItem: {
     flexDirection: "row",
@@ -215,17 +232,39 @@ const styles = StyleSheet.create({
   modalContent: {
     height: "50%",
     width: "90%",
-    // backgroundColor: "#FFF",
     borderRadius: 10,
-    // padding: 20,
   },
   closeButton: {
     alignSelf: "flex-end",
     padding: 5,
   },
-  closeButtonText: {
+  actionButtonsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    position: "absolute",
+    bottom: 30,
+    left: 20,
+    right: 20,
+  },
+  addButton: {
+    flex: 1,
+    backgroundColor: "#4CAF50",
+    marginRight: 10,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  removeButton: {
+    flex: 1,
+    backgroundColor: "#FF6347",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  actionButtonText: {
+    color: "#fff",
     fontSize: 16,
-    color: "#1E90FF",
+    fontWeight: "bold",
   },
 });
 

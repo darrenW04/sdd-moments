@@ -14,7 +14,7 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type User = {
-  userId: string;
+  user_id: string;
   username: string;
 };
 
@@ -25,15 +25,26 @@ const AddFriendsPage = () => {
   const router = useRouter();
 
   const searchUsers = async () => {
+    if (!searchQuery.trim()) {
+      Alert.alert("Error", "Please enter a username to search.");
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await axios.get(
         `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/users/search`,
         {
-          params: { query: searchQuery },
+          params: { username: searchQuery.trim() },
         }
       );
-      setResults(response.data); // Ensure your API returns an array of users
+
+      if (response.data.length === 0) {
+        Alert.alert("No Results", "No users found with this username.");
+      } else {
+        console.log("Search results:", response.data);
+        setResults(response.data);
+      }
     } catch (error) {
       console.error("Error searching users:", error);
       Alert.alert("Error", "Unable to search for users.");
@@ -49,20 +60,24 @@ const AddFriendsPage = () => {
         Alert.alert("Error", "No user ID found.");
         return;
       }
-
-      await axios.post(
-        `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/users/${currentUserId}/addFriend`,
+  
+      console.log("Adding Friend:", { currentUserId, friendId }); // Debugging log
+  
+      const response = await axios.post(
+        `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/users/${currentUserId}/add-friend`,
         {
-          friendId,
+          friendId, // Ensure this matches the backend field
         }
       );
-
-      Alert.alert("Success", "Friend request sent!");
+  
+      console.log("Friend added successfully:", response.data);
+      Alert.alert("Success", "Friend added successfully!");
     } catch (error) {
       console.error("Error adding friend:", error);
-      Alert.alert("Error", "Unable to send friend request.");
+      Alert.alert("Error", "Unable to add friend.");
     }
   };
+  
 
   return (
     <View style={styles.container}>
@@ -76,7 +91,8 @@ const AddFriendsPage = () => {
 
       <TextInput
         style={styles.input}
-        placeholder="Search for a friend..."
+        placeholder="Search for a username..."
+        placeholderTextColor="#bbb"
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
@@ -89,20 +105,27 @@ const AddFriendsPage = () => {
           {loading ? "Searching..." : "Search"}
         </Text>
       </TouchableOpacity>
+
       <FlatList
         data={results}
-        keyExtractor={(item) => item.userId}
-        renderItem={({ item }) => (
-          <View style={styles.userItem}>
-            <Text style={styles.username}>{item.username}</Text>
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => addFriend(item.userId)}
-            >
-              <Text style={styles.addButtonText}>Add Friend</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        keyExtractor={(item) => {
+          console.log("KeyExtractor item:", item);
+          return item.user_id;
+        }}
+        renderItem={({ item }) => {
+          console.log("RenderItem item:", item);
+          return (
+            <View style={styles.userItem}>
+              <Text style={styles.username}>{item.username}</Text>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => addFriend(item.user_id)}
+              >
+                <Text style={styles.addButtonText}>Add Friend</Text>
+              </TouchableOpacity>
+            </View>
+          );
+        }}
       />
     </View>
   );
@@ -112,7 +135,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#121212",
   },
   backButton: {
     position: "absolute",
@@ -121,22 +144,24 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: "#007bff",
+    backgroundColor: "#1E90FF",
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1,
   },
   input: {
     height: 40,
-    top: 125,
     borderWidth: 1,
-    borderColor: "#ccc",
-    paddingHorizontal: 10,
+    borderColor: "#333",
+    backgroundColor: "#1A1A1A",
+    color: "#fff",
+    paddingLeft: 10,
+    marginLeft: 50,
     borderRadius: 5,
     marginBottom: 20,
+    marginTop: 130,
   },
   searchButton: {
-    top: 127,
     backgroundColor: "#007bff",
     paddingVertical: 10,
     borderRadius: 5,
@@ -152,12 +177,13 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     padding: 10,
-    backgroundColor: "#fff",
+    backgroundColor: "#1A1A1A",
     borderRadius: 5,
     marginBottom: 10,
   },
   username: {
     fontSize: 16,
+    color: "#fff",
   },
   addButton: {
     backgroundColor: "#4CAF50",

@@ -49,31 +49,59 @@ const RemoveFriendsPage = () => {
   }, []);
 
   const removeFriend = async (friendId: string) => {
-    try {
-      const currentUserId = await AsyncStorage.getItem("currentUserId");
-      if (!currentUserId) {
-        Alert.alert("Error", "No user ID found.");
-        return;
-      }
+    Alert.alert(
+      "Confirm Remove Friend",
+      "Are you sure you want to remove this friend?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Yes",
+          onPress: async () => {
+            try {
+              const currentUserId = await AsyncStorage.getItem("currentUserId");
+              if (!currentUserId) {
+                Alert.alert("Error", "No user ID found.");
+                return;
+              }
 
-      await axios.post(
-        `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/users/${currentUserId}/removeFriend`,
-        { friendId }
-      );
+              console.log("Current User ID:", currentUserId);
+              console.log("Friend ID to remove:", friendId);
 
-      setFriends((prevFriends) =>
-        prevFriends.filter((friend) => friend.userId !== friendId)
-      );
-      Alert.alert("Success", "Friend removed successfully!");
-    } catch (error) {
-      console.error("Error removing friend:", error);
-      Alert.alert("Error", "Unable to remove friend.");
-    }
+              const response = await axios.post(
+                `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/users/${currentUserId}/remove-friend`,
+                { friendId }
+              );
+
+              console.log("Remove Friend API Response:", response.data);
+
+              if (response.status === 200) {
+                setFriends((prevFriends) =>
+                  prevFriends.filter((friend) => friend.userId !== friendId)
+                );
+                Alert.alert("Success", "Friend removed successfully!");
+              } else {
+                Alert.alert("Error", response.data.message);
+              }
+            } catch (error) {
+              console.error("Error removing friend:", error);
+              Alert.alert("Error", "Unable to remove friend.");
+            }
+          },
+        },
+      ]
+    );
   };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      {/* Back Button */}
       <TouchableOpacity
         onPress={() => router.replace("/friends")}
         style={styles.backButton}
@@ -81,21 +109,26 @@ const RemoveFriendsPage = () => {
         <FontAwesome name="arrow-left" size={24} color="#fff" />
       </TouchableOpacity>
 
-      <FlatList
-        data={friends}
-        keyExtractor={(item) => item.userId}
-        renderItem={({ item }) => (
-          <View style={styles.friendItem}>
-            <Text style={styles.friendName}>{item.name}</Text>
-            <TouchableOpacity
-              style={styles.removeButton}
-              onPress={() => removeFriend(item.userId)}
-            >
-              <Text style={styles.removeButtonText}>Remove Friend</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      />
+      <View style={{ flex: 1 }}>
+        <FlatList
+          data={friends}
+          keyExtractor={(item) => item.userId}
+          renderItem={({ item }) => (
+            <View style={styles.friendItem}>
+              <Text style={styles.friendName}>{item.name}</Text>
+              <TouchableOpacity
+                style={styles.removeButton}
+                onPress={() => {
+                  console.log("Remove button clicked for:", item.userId);
+                  removeFriend(item.userId);
+                }}
+              >
+                <Text style={styles.removeButtonText}>Remove Friend</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        />
+      </View>
     </View>
   );
 };
@@ -104,7 +137,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#f0f0f0",
+    paddingTop: 130,
+    backgroundColor: "#121212",
+  },
+  loadingText: {
+    color: "#fff",
+    textAlign: "center",
+    fontSize: 18,
   },
   backButton: {
     position: "absolute",
@@ -113,32 +152,36 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: "#007bff",
+    backgroundColor: "#1E90FF",
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 1,
+    elevation: 5,
   },
   friendItem: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 10,
-    top: 135,
-    backgroundColor: "#fff",
-    borderRadius: 5,
+    marginTop: 10,
     marginBottom: 10,
+    backgroundColor: "#1A1A1A",
+    borderRadius: 8,
   },
   friendName: {
-    fontSize: 16,
+    fontSize: 18,
+    color: "#fff",
+    fontWeight: "bold",
   },
   removeButton: {
     backgroundColor: "#FF4D4D",
-    paddingVertical: 5,
-    paddingHorizontal: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderRadius: 5,
   },
   removeButtonText: {
     color: "#fff",
+    fontSize: 14,
+    fontWeight: "bold",
   },
 });
 

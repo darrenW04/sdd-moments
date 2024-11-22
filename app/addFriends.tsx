@@ -29,16 +29,16 @@ const AddFriendsPage = () => {
       Alert.alert("Error", "Please enter a username to search.");
       return;
     }
-
+  
     setLoading(true);
     try {
       const response = await axios.get(
         `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/users/search`,
         {
-          params: { username: searchQuery.trim() },
+          params: { query: searchQuery.trim() }, // Correct parameter name
         }
       );
-
+  
       if (response.data.length === 0) {
         Alert.alert("No Results", "No users found with this username.");
       } else {
@@ -52,6 +52,7 @@ const AddFriendsPage = () => {
       setLoading(false);
     }
   };
+  
 
   const addFriend = async (friendId: string) => {
     try {

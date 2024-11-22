@@ -135,7 +135,7 @@ app.post("/api/users/:userId/add-friend", async (req, res) => {
 
 
 app.get("/api/users/search", async (req, res) => {
-  const { query } = req.query;
+  const { query } = req.query; // Ensure "query" matches what the frontend sends
 
   if (!query) {
     return res.status(400).json({ message: "Query parameter is required." });
@@ -160,6 +160,7 @@ app.get("/api/users/search", async (req, res) => {
     res.status(500).json({ message: "Internal server error." });
   }
 });
+
 
 
 

@@ -10,40 +10,63 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FontAwesome } from "@expo/vector-icons"; // For the back icon
+import { FontAwesome } from "@expo/vector-icons";
+import axios from "axios";
 
 const EditProfile = () => {
   const router = useRouter();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const [profile, setProfile] = useState({
     avatar: "",
     name: "",
-    bio: "",
     email: "",
-    location: "",
+    password: "",
   });
 
   useEffect(() => {
-    // Load profile data from AsyncStorage
     const loadProfile = async () => {
-      const storedProfile = await AsyncStorage.getItem("@profile_data");
-      if (storedProfile) {
-        setProfile(JSON.parse(storedProfile));
+      try {
+        const userId = await AsyncStorage.getItem("currentUserId");
+        if (!userId) {
+          console.error("Current user ID not found");
+          return;
+        }
+        setCurrentUserId(userId);
+
+        const response = await axios.get(
+          `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/users/${userId}`
+        );
+        const { profile_picture, username, email, password } = response.data;
+        setProfile({
+          avatar: profile_picture,
+          name: username,
+          email: email,
+          password: password, // Load the current password
+        });
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
       }
     };
+
     loadProfile();
   }, []);
 
   const handleSave = async () => {
-    // Save updated profile data to AsyncStorage
+    if (!currentUserId) {
+      Alert.alert("Error", "User ID not found");
+      return;
+    }
+
     try {
-      await AsyncStorage.setItem("@profile_data", JSON.stringify(profile));
-      Alert.alert(
-        "Profile Updated",
-        "Your profile has been updated successfully."
+      const response = await axios.put(
+        `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/users/${currentUserId}`,
+        profile
       );
-      router.push("/profile"); // Navigate back to Profile page
+      Alert.alert("Profile Updated", response.data.message);
+      router.replace("/profile");
     } catch (error) {
+      console.error("Error updating profile:", error);
       Alert.alert("Error", "There was an error saving your profile.");
     }
   };
@@ -52,7 +75,10 @@ const EditProfile = () => {
     <View style={styles.container}>
       <SafeAreaView edges={["top"]} />
       {/* Back Button */}
-      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+      <TouchableOpacity
+        onPress={() => router.replace("/profile")}
+        style={styles.backButton}
+      >
         <FontAwesome name="arrow-left" size={24} color="#fff" />
       </TouchableOpacity>
 
@@ -63,6 +89,7 @@ const EditProfile = () => {
       <TextInput
         style={styles.input}
         placeholder="Enter avatar URL"
+        placeholderTextColor="#bbb"
         value={profile.avatar}
         onChangeText={(text) => setProfile({ ...profile, avatar: text })}
       />
@@ -72,19 +99,9 @@ const EditProfile = () => {
       <TextInput
         style={styles.input}
         placeholder="Enter your name"
+        placeholderTextColor="#bbb"
         value={profile.name}
         onChangeText={(text) => setProfile({ ...profile, name: text })}
-      />
-
-      {/* Bio */}
-      <Text style={styles.label}>Bio</Text>
-      <TextInput
-        style={[styles.input, styles.textArea]}
-        placeholder="Enter a short bio"
-        value={profile.bio}
-        multiline
-        numberOfLines={4}
-        onChangeText={(text) => setProfile({ ...profile, bio: text })}
       />
 
       {/* Email */}
@@ -92,17 +109,20 @@ const EditProfile = () => {
       <TextInput
         style={styles.input}
         placeholder="Enter your email"
+        placeholderTextColor="#bbb"
         value={profile.email}
         onChangeText={(text) => setProfile({ ...profile, email: text })}
       />
 
-      {/* Location */}
-      <Text style={styles.label}>Location</Text>
+      {/* Password */}
+      <Text style={styles.label}>Password</Text>
       <TextInput
         style={styles.input}
-        placeholder="Enter your location"
-        value={profile.location}
-        onChangeText={(text) => setProfile({ ...profile, location: text })}
+        placeholder="Enter your password"
+        placeholderTextColor="#bbb"
+        secureTextEntry
+        value={profile.password}
+        onChangeText={(text) => setProfile({ ...profile, password: text })}
       />
 
       {/* Save Button */}
@@ -117,7 +137,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#121212", // Dark background
   },
   backButton: {
     position: "absolute",
@@ -126,7 +146,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: "#007bff",
+    backgroundColor: "#1E90FF",
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1,
@@ -134,30 +154,28 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "bold",
+    color: "#FFFFFF",
     marginBottom: 20,
     textAlign: "center",
   },
   label: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
+    color: "#FFFFFF",
     marginBottom: 5,
   },
   input: {
     height: 40,
-    borderColor: "#ccc",
+    borderColor: "#333",
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 10,
     marginBottom: 15,
-    backgroundColor: "#fff",
-  },
-  textArea: {
-    height: 80,
-    textAlignVertical: "top", // Ensures text starts from the top in multiline input
+    backgroundColor: "#1A1A1A",
+    color: "#FFFFFF", // Input text color
   },
   saveButton: {
-    backgroundColor: "#007bff",
+    backgroundColor: "#1E90FF",
     paddingVertical: 12,
     paddingHorizontal: 30,
     borderRadius: 8,
@@ -165,7 +183,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   saveButtonText: {
-    color: "#fff",
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "bold",
   },

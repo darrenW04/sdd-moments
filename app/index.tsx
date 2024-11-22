@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 16,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#121212", // Dark background color
   },
   toggleButton: {
     marginTop: 20,
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
   },
   toggleText: {
     fontSize: 16,
-    color: "#007BFF",
+    color: "#BB86FC", // Light purple color for toggle text
     textDecorationLine: "underline",
   },
 });

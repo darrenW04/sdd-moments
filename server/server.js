@@ -9,7 +9,7 @@ let Vimeo = require("vimeo").Vimeo;
 let client_vim = new Vimeo(CLIENT_ID, CLIENT_SECRET, ACCESS_TOKEN);
 const express = require("express");
 const path = require("path");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const bodyParser = require("body-parser");
 
 const app = express();
@@ -40,6 +40,162 @@ async function connectToMongoDB() {
 }
 
 connectToMongoDB();
+
+
+app.post("/api/videos/like", async (req, res) => {
+  const { videoId, userId, action } = req.body;
+
+  if (!videoId || !userId || !action) {
+    return res.status(400).json({ message: "Video ID, User ID, and action are required." });
+  }
+
+  try {
+    const video = await db.collection("Videos").findOne({ video_id: videoId });
+
+    if (!video) {
+      return res.status(404).json({ message: "Video not found." });
+    }
+
+    if (action === "like") {
+      // Check if user already liked the video
+      if (video.likes.includes(userId)) {
+        return res.status(400).json({ message: "User has already liked this video." });
+      }
+
+      // Add user to likes array
+      await db.collection("Videos").updateOne(
+        { video_id: videoId },
+        { $push: { likes: userId }, $inc: { likeCount: 1 } } // Increment likeCount field
+      );
+      return res.status(200).json({ message: "Video liked successfully." });
+    } else if (action === "unlike") {
+      // Check if user already liked the video
+      if (!video.likes.includes(userId)) {
+        return res.status(400).json({ message: "User has not liked this video." });
+      }
+
+      // Remove user from likes array
+      await db.collection("Videos").updateOne(
+        { video_id: videoId },
+        { $pull: { likes: userId }, $inc: { likeCount: -1 } } // Decrement likeCount field
+      );
+      return res.status(200).json({ message: "Video unliked successfully." });
+    } else {
+      return res.status(400).json({ message: "Invalid action." });
+    }
+  } catch (error) {
+    console.error("Error processing like/unlike:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
+
+
+
+app.post("/api/users/:userId/add-friend", async (req, res) => {
+  const { userId } = req.params;
+  const { friendId } = req.body;
+
+  if (!friendId) {
+    return res.status(400).json({ message: "Friend ID is required." });
+  }
+
+  try {
+    const user = await db.collection("Users").findOne({ user_id: userId });
+    const friend = await db.collection("Users").findOne({ user_id: friendId });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    if (!friend) {
+      return res.status(404).json({ message: "Friend not found." });
+    }
+
+    // Check if already friends
+    const isAlreadyFriend = user.friends.some(
+      (f) => f.friend_user_id === friendId
+    );
+
+    if (isAlreadyFriend) {
+      return res.status(400).json({ message: "Already friends." });
+    }
+
+    // Add friend to user's friends array
+    await db.collection("Users").updateOne(
+      { user_id: userId },
+      { $push: { friends: { friend_user_id: friendId, status: "accepted" } } }
+    );
+
+    res.status(200).json({ message: "Friend added successfully!" });
+  } catch (error) {
+    console.error("Error adding friend:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
+
+
+app.get("/api/users/search", async (req, res) => {
+  const { query } = req.query;
+
+  if (!query) {
+    return res.status(400).json({ message: "Query parameter is required." });
+  }
+
+  try {
+    const users = await db
+      .collection("Users")
+      .find({
+        username: { $regex: query, $options: "i" }, // Case-insensitive search
+      })
+      .project({ user_id: 1, username: 1, _id: 0 }) // Only return user_id and username
+      .toArray();
+
+    if (users.length === 0) {
+      return res.status(404).json({ message: "No users found." });
+    }
+
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Error searching users:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
+
+
+
+
+app.post("/api/users/:userId/remove-friend", async (req, res) => {
+  const { userId } = req.params; // This is the current user's ID
+  const { friendId } = req.body; // This is the ID of the friend to remove
+
+  console.log(`API Call to remove friend:`);
+  console.log(`User ID: ${userId}, Friend ID: ${friendId}`);
+
+  try {
+    const result = await db.collection("Users").updateOne(
+      { user_id: userId },
+      { $pull: { friends: { friend_user_id: friendId } } }
+    );
+
+    console.log("Update Result:", result);
+
+    if (result.modifiedCount === 0) {
+      console.log("No matching friend found to remove.");
+      return res
+        .status(404)
+        .json({ message: "Friend not found or already removed." });
+    }
+
+    console.log("Friend removed successfully.");
+    res.status(200).json({ message: "Friend removed successfully." });
+  } catch (error) {
+    console.error("Error removing friend:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
+
+
+
 
 // Vimeo upload endpoint
 app.post("/api/vimeo", async (req, res) => {
@@ -77,6 +233,86 @@ app.post("/api/vimeo", async (req, res) => {
   }
 });
 
+// Endpoint to fetch a user's friends
+app.get("/api/users/:userId/friends", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Find the current user by ID
+    const user = await db.collection("Users").findOne({ user_id: userId });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Extract the friends array from the user document
+    const friends = user.friends || [];
+
+    // Fetch details for each friend
+    const friendsDetails = await Promise.all(
+      friends.map(async (friend) => {
+        const friendDetails = await db.collection("Users").findOne({
+          user_id: friend.friend_user_id.toString(),
+        });
+
+        return {
+          userId: friend.friend_user_id,
+          name: friendDetails ? friendDetails.username : "Unknown",
+        };
+      })
+    );
+
+    res.status(200).json(friendsDetails);
+  } catch (error) {
+    console.error("Error fetching friends:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Update user profile
+app.put("/api/users/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const { avatar, name, email, password } = req.body;
+
+    // Validate input
+    if (!avatar || !name || !email || !password) {
+      return res
+        .status(400)
+        .json({ message: "All fields (avatar, name, email, password) are required." });
+    }
+
+    // Check if userId is a valid ObjectId
+    let query = {};
+    if (/^[0-9a-fA-F]{24}$/.test(userId)) {
+      query = { _id: new ObjectId(userId) };
+    } else {
+      query = { user_id: userId }; // Use alternate field if `user_id` is a string in your database
+    }
+
+    // Update user in the database
+    const updateResult = await db.collection("Users").updateOne(query, {
+      $set: {
+        profile_picture: avatar,
+        username: name,
+        email: email,
+        password: password, // Update the password
+        updated_at: new Date().toISOString(),
+      },
+    });
+
+    if (updateResult.matchedCount === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ message: "Profile updated successfully" });
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+
 //Endpoint to get the profile page informtion
 app.get("/api/users/:userId", async (req, res) => {
   try {
@@ -96,6 +332,7 @@ app.get("/api/users/:userId", async (req, res) => {
       profile_picture: user.profile_picture,
       created_at: user.created_at,
       friend_count: user.friends ? user.friends.length : 0,
+      friends: user.friends || [],
     };
 
     res.status(200).json(userData);
@@ -159,11 +396,131 @@ app.get("/api/videos", async (req, res) => {
       isPublic: video.is_public,
       uploadTime: video.upload_time,
       viewCount: video.view_count,
+      likes: video.likes,
+      comments: video.comments || [], // Include comments if they exist, otherwise default to an empty array
     }));
 
     res.status(200).json(formattedVideos);
   } catch (error) {
     console.error("Error fetching videos:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+// Toggle video visibility
+app.put("/api/videos/:videoId/toggleVisibility", async (req, res) => {
+  try {
+    const { videoId } = req.params;
+
+    // Validate if videoId matches your expected format, e.g., MongoDB's ObjectId or a specific string format
+    const query = /^[0-9a-fA-F]{24}$/.test(videoId)
+      ? { _id: new ObjectId(videoId) }
+      : { video_id: videoId }; // Adjust for alternate ID format if necessary
+
+    // Toggle video visibility by inverting the current is_public value
+    const updateResult = await db
+      .collection("Videos")
+      .updateOne(query, [{ $set: { is_public: { $not: "$is_public" } } }]);
+
+    // Check if the video was found and updated
+    if (updateResult.matchedCount === 0) {
+      return res.status(404).json({ message: "Video not found" });
+    }
+    console.log(updateResult);
+    res.status(200).json({ message: "Video visibility toggled successfully" });
+  } catch (error) {
+    console.error("Error toggling video visibility:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+app.get("/api/videos", async (req, res) => {
+  try {
+    const videos = await db.collection("Videos").find().toArray();
+    if (videos.length === 0) {
+      return res.status(404).json({ message: "No videos found" });
+    }
+
+    const formattedVideos = videos.map((video) => ({
+      videoId: video.video_id,
+      userId: video.user_id,
+      videoUrl: video.video_url,
+      title: video.title,
+      description: video.description,
+      likes: video.likes || [], // Ensure likes is an array
+      uploadTime: video.upload_time,
+      comments: video.comments || [], // Default to empty array if not present
+      isPublic: video.is_public,
+    }));
+
+    res.status(200).json(formattedVideos);
+  } catch (error) {
+    console.error("Error fetching videos:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// DELETE endpoint to delete a video
+app.delete("/api/videos/:videoId", async (req, res) => {
+  try {
+    const { videoId } = req.params;
+
+    if (!videoId) {
+      return res.status(400).json({ message: "Video ID is required." });
+    }
+
+    const result = await db
+      .collection("Videos")
+      .deleteOne({ video_id: videoId });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "Video not found." });
+    }
+
+    res.status(200).json({ message: "Video deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting video:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
+
+// Endpoint to add a comment to a specific video
+app.post("/api/videos/comments", async (req, res) => {
+  try {
+    console.log("Adding comment to video");
+    const { videoId, userId, comment } = req.body;
+    console.log(videoId, userId, comment);
+    if (!videoId || !userId || !comment) {
+      return res
+        .status(400)
+        .json({ message: "videoId, userId, and comment are required." });
+    }
+
+    // Push the new comment into the video's comments array
+    const result = await db.collection("Videos").updateOne(
+      { video_id: videoId },
+      {
+        $push: {
+          comments: {
+            userId,
+            comment,
+          },
+        },
+      }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({ message: "Video not found." });
+    }
+
+    res.status(200).json({
+      message: "Comment added successfully",
+      comment: {
+        userId,
+        comment,
+      },
+    });
+  } catch (error) {
+    console.error("Error adding comment:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });

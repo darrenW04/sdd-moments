@@ -12,6 +12,8 @@ export default function RootLayout() {
       <Stack.Screen name="home" />
 
       <Stack.Screen name="index" />
+      <Stack.Screen name="addFriends" />
+      <Stack.Screen name="removeFriends" />
       <Stack.Screen name="friends" />
       <Stack.Screen name="uploads" />
     </Stack>

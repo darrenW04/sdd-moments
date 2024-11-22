@@ -11,6 +11,7 @@ const express = require("express");
 const path = require("path");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const bodyParser = require("body-parser");
+const crypto = require("crypto");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -557,30 +558,49 @@ app.post("/api/login", async (req, res) => {
 
 // Sign-up endpoint
 app.post("/api/signup", async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, username, profile_picture } = req.body;
 
   try {
+    // Check for duplicate email
     const existingUser = await db.collection("Users").findOne({ email });
-
     if (existingUser) {
       return res.status(400).json({ message: "Email already exists" });
     }
 
+    // Check for duplicate username
+    const existingUsername = await db.collection("Users").findOne({ username });
+    if (existingUsername) {
+      return res.status(400).json({ message: "Username already exists" });
+    }
+
+    // Generate a unique user_id
+    const user_id = crypto.randomBytes(8).toString("hex"); // 16-character hexadecimal string
+
     const newUser = {
       email,
-      password, // Storing password in plain text (not secure, for testing only)
+      password, // Store securely in production (e.g., hashed with bcrypt)
+      user_id,
+      username,
+      profile_picture: profile_picture || "https://via.placeholder.com/100", // Default profile picture
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      last_login: null,
+      is_active: true,
+      friends: [],
+      likes: [], // Empty likes array
     };
 
     const result = await db.collection("Users").insertOne(newUser);
     res.status(201).json({
       message: "User registered successfully",
-      userId: result.insertedId,
+      userId: user_id,
     });
   } catch (error) {
     console.error("Error during sign-up:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
 
 // Sample route for checking API
 app.get("/api", (req, res) => {

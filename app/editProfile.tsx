@@ -21,6 +21,7 @@ const EditProfile = () => {
     avatar: "",
     name: "",
     email: "",
+    password: "",
   });
 
   useEffect(() => {
@@ -36,11 +37,12 @@ const EditProfile = () => {
         const response = await axios.get(
           `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/users/${userId}`
         );
-        const { profile_picture, username, email } = response.data;
+        const { profile_picture, username, email, password } = response.data;
         setProfile({
           avatar: profile_picture,
           name: username,
           email: email,
+          password: password, // Load the current password
         });
       } catch (error) {
         console.error("Error fetching profile data:", error);
@@ -110,6 +112,17 @@ const EditProfile = () => {
         placeholderTextColor="#bbb"
         value={profile.email}
         onChangeText={(text) => setProfile({ ...profile, email: text })}
+      />
+
+      {/* Password */}
+      <Text style={styles.label}>Password</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Enter your password"
+        placeholderTextColor="#bbb"
+        secureTextEntry
+        value={profile.password}
+        onChangeText={(text) => setProfile({ ...profile, password: text })}
       />
 
       {/* Save Button */}

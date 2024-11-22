@@ -42,6 +42,55 @@ async function connectToMongoDB() {
 connectToMongoDB();
 
 
+app.post("/api/videos/like", async (req, res) => {
+  const { videoId, userId, action } = req.body;
+
+  if (!videoId || !userId || !action) {
+    return res.status(400).json({ message: "Video ID, User ID, and action are required." });
+  }
+
+  try {
+    const video = await db.collection("Videos").findOne({ video_id: videoId });
+
+    if (!video) {
+      return res.status(404).json({ message: "Video not found." });
+    }
+
+    if (action === "like") {
+      // Check if user already liked the video
+      if (video.likes.includes(userId)) {
+        return res.status(400).json({ message: "User has already liked this video." });
+      }
+
+      // Add user to likes array
+      await db.collection("Videos").updateOne(
+        { video_id: videoId },
+        { $push: { likes: userId }, $inc: { likeCount: 1 } } // Increment likeCount field
+      );
+      return res.status(200).json({ message: "Video liked successfully." });
+    } else if (action === "unlike") {
+      // Check if user already liked the video
+      if (!video.likes.includes(userId)) {
+        return res.status(400).json({ message: "User has not liked this video." });
+      }
+
+      // Remove user from likes array
+      await db.collection("Videos").updateOne(
+        { video_id: videoId },
+        { $pull: { likes: userId }, $inc: { likeCount: -1 } } // Decrement likeCount field
+      );
+      return res.status(200).json({ message: "Video unliked successfully." });
+    } else {
+      return res.status(400).json({ message: "Invalid action." });
+    }
+  } catch (error) {
+    console.error("Error processing like/unlike:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
+
+
+
 app.post("/api/users/:userId/add-friend", async (req, res) => {
   const { userId } = req.params;
   const { friendId } = req.body;
@@ -224,13 +273,13 @@ app.get("/api/users/:userId/friends", async (req, res) => {
 app.put("/api/users/:userId", async (req, res) => {
   try {
     const userId = req.params.userId;
-    const { avatar, name, email } = req.body;
+    const { avatar, name, email, password } = req.body;
 
     // Validate input
-    if (!avatar || !name || !email) {
+    if (!avatar || !name || !email || !password) {
       return res
         .status(400)
-        .json({ message: "All fields (avatar, name, email) are required." });
+        .json({ message: "All fields (avatar, name, email, password) are required." });
     }
 
     // Check if userId is a valid ObjectId
@@ -247,6 +296,7 @@ app.put("/api/users/:userId", async (req, res) => {
         profile_picture: avatar,
         username: name,
         email: email,
+        password: password, // Update the password
         updated_at: new Date().toISOString(),
       },
     });
@@ -261,6 +311,7 @@ app.put("/api/users/:userId", async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
 
 //Endpoint to get the profile page informtion
 app.get("/api/users/:userId", async (req, res) => {
@@ -382,27 +433,32 @@ app.put("/api/videos/:videoId/toggleVisibility", async (req, res) => {
   }
 });
 
-app.post("/api/videos", async (req, res) => {
+app.get("/api/videos", async (req, res) => {
   try {
-    const video = req.body;
-
-    if (!video.user_id || !video.video_url || !video.upload_time) {
-      return res.status(400).json({
-        message: "Missing required fields: userId, videoUrl, or uploadTime",
-      });
+    const videos = await db.collection("Videos").find().toArray();
+    if (videos.length === 0) {
+      return res.status(404).json({ message: "No videos found" });
     }
 
-    const result = await db.collection("Videos").insertOne(video);
+    const formattedVideos = videos.map((video) => ({
+      videoId: video.video_id,
+      userId: video.user_id,
+      videoUrl: video.video_url,
+      title: video.title,
+      description: video.description,
+      likes: video.likes || [], // Ensure likes is an array
+      uploadTime: video.upload_time,
+      comments: video.comments || [], // Default to empty array if not present
+      isPublic: video.is_public,
+    }));
 
-    res.status(201).json({
-      message: "Video added successfully",
-      videoId: result.insertedId,
-    });
+    res.status(200).json(formattedVideos);
   } catch (error) {
-    console.error("Error adding video:", error);
+    console.error("Error fetching videos:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
 // DELETE endpoint to delete a video
 app.delete("/api/videos/:videoId", async (req, res) => {
   try {

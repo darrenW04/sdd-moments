@@ -112,9 +112,9 @@ const LoginPage: React.FC = () => {
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Log In</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={handleDev}>
+      {/* <TouchableOpacity style={styles.button} onPress={handleDev}>
         <Text style={styles.buttonText}>Dev</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 };

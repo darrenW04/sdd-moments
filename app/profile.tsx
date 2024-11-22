@@ -84,7 +84,6 @@ const ProfilePage = () => {
           setVideos(sortedVideos);
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
         Alert.alert(
           "Error",
           "An error occurred while loading your profile. Please try again."
@@ -96,6 +95,67 @@ const ProfilePage = () => {
 
     fetchUserProfile();
   }, []);
+
+  const handleDeleteVideo = async (videoId: string) => {
+    try {
+      const confirmDelete = await new Promise((resolve) => {
+        Alert.alert(
+          "Delete Video",
+          "Are you sure you want to delete this video?",
+          [
+            { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
+            {
+              text: "Delete",
+              style: "destructive",
+              onPress: () => resolve(true),
+            },
+          ]
+        );
+      });
+
+      if (!confirmDelete) return;
+
+      await axios.delete(
+        `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/videos/${videoId}/toggleVisibility`
+      );
+
+      setVideos((prevVideos) =>
+        prevVideos.filter((video) => video.videoId !== videoId)
+      );
+
+      Alert.alert("Success", "Video deleted successfully.");
+    } catch (error) {
+      console.error("Error deleting video:", error);
+      Alert.alert("Error", "An error occurred while deleting the video.");
+    }
+  };
+
+  // Function to toggle video visibility
+  const toggleVideoVisibility = async (videoId: string) => {
+    try {
+      const response = await axios.put(
+        `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/videos/${videoId}/toggleVisibility`
+      );
+
+      // Check the response to ensure it's correctly toggled
+      const updatedVisibility = response.data.isPublic;
+
+      // Update the video visibility in the state
+      setVideos((prevVideos) =>
+        prevVideos.map((video) =>
+          video.videoId === videoId
+            ? { ...video, isPublic: !video.isPublic } // Update with the new visibility state
+            : video
+        )
+      );
+
+      // Alert message based on the updated visibility status
+      Alert.alert("Success video updated");
+    } catch (error) {
+      console.error("Error toggling video visibility:", error);
+      Alert.alert("Error", "An error occurred while updating visibility.");
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -195,6 +255,27 @@ const ProfilePage = () => {
                   allowsFullscreenVideo
                 />
               </View>
+
+              {/* Toggle visibility button */}
+              <TouchableOpacity
+                style={[
+                  styles.toggleVisibilityButton,
+                  item.isPublic ? styles.publicButton : styles.privateButton,
+                ]}
+                onPress={() => toggleVideoVisibility(item.videoId)}
+              >
+                <Text style={styles.toggleButtonText}>
+                  {item.isPublic ? "Set to Private" : "Set to Public"}
+                </Text>
+              </TouchableOpacity>
+
+              {/* Delete button */}
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => handleDeleteVideo(item.videoId)}
+              >
+                <Text style={styles.deleteButtonText}>Delete</Text>
+              </TouchableOpacity>
             </View>
           )}
           scrollEnabled={false}
@@ -213,6 +294,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  deleteButton: {
+    backgroundColor: "#FF4D4D",
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+    alignItems: "center",
+  },
+  deleteButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
   },
   backButton: {
     position: "absolute",
@@ -331,6 +423,16 @@ const styles = StyleSheet.create({
     color: "#BBBBBB",
     marginBottom: 10,
   },
+  videoLink: {
+    backgroundColor: "#1E90FF",
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 5,
+  },
+  linkText: {
+    color: "#FFFFFF",
+    textAlign: "center",
+  },
   videoContainer: {
     width: "100%",
     height: (screenWidth - 32) * (9 / 16), // Adjust for 16:9 aspect ratio
@@ -341,7 +443,23 @@ const styles = StyleSheet.create({
   webview: {
     flex: 1,
   },
+  toggleVisibilityButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  publicButton: {
+    backgroundColor: "#4CAF50",
+  },
+  privateButton: {
+    backgroundColor: "#FF6347",
+  },
+  toggleButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
+  },
 });
-
 
 export default ProfilePage;

@@ -116,7 +116,7 @@ const ProfilePage = () => {
       if (!confirmDelete) return;
 
       await axios.delete(
-        `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/videos/${videoId}/toggleVisibility`
+        `http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/api/videos/${videoId}`
       );
 
       setVideos((prevVideos) =>

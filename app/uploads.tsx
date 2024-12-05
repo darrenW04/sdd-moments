@@ -7,6 +7,7 @@ import {
   View,
   Modal,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 import { Video, ResizeMode } from "expo-av";
@@ -26,6 +27,7 @@ export default function UploadsPage() {
   const [isModalVisible, setIsModalVisible] = useState(false); // State for overlay/modal
   const cameraRef = useRef<CameraView | null>(null);
   const videoRef = useRef<Video | null>(null);
+  const [isUploading, setisUploading] = useState(false);
   const [hasMediaLibraryPermission, setHasMediaLibraryPermission] =
     useState(false);
 
@@ -88,10 +90,11 @@ export default function UploadsPage() {
 
   const uploadVideo = async () => {
     if (videoUri) {
-      setIsModalVisible(false);
-      console.log("Uploading video...");
+      //Set loading to true and disable the button for upload
+      setisUploading(true);
       await UploadCachedVideo(videoUri);
-      console.log("Video uploaded successfully!");
+      setisUploading(false);
+      setIsModalVisible(false);
     }
   };
 
@@ -170,8 +173,13 @@ export default function UploadsPage() {
               <TouchableOpacity
                 style={styles.uploadButton}
                 onPress={uploadVideo}
+                disabled={isUploading}
               >
-                <Text style={styles.text}>Upload</Text>
+                {isUploading ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text style={styles.text}>Upload</Text>
+                )}
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.cancelButton}

@@ -88,8 +88,10 @@ export default function UploadsPage() {
 
   const uploadVideo = async () => {
     if (videoUri) {
-      await UploadCachedVideo(videoUri);
       setIsModalVisible(false);
+      console.log("Uploading video...");
+      await UploadCachedVideo(videoUri);
+      console.log("Video uploaded successfully!");
     }
   };
 

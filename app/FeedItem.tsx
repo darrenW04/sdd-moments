@@ -165,7 +165,11 @@ const FeedItem = ({ video, onLike }: FeedItemProps) => {
       </Text>
       <Text style={styles.caption}>{video.description}</Text>
       <TouchableOpacity
-        onPress={() => onLike(video._id)}
+        onPress={() => {
+          onLike(video._id);
+          setLiked(!liked);
+          setLikes(liked ? likes - 1 : likes + 1);
+        }}
         style={styles.likeButton}
       >
         <FontAwesome

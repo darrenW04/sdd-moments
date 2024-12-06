@@ -68,7 +68,23 @@ const FeedItem = ({ video, onLike }: FeedItemProps) => {
   );
   const [newComment, setNewComment] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null); // Store current user's ID
+  const [username, setUsername] = useState("");
 
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const { profile } = await fetchUserProfile(video.userId);
+        setUsername(profile.username);
+      } catch (error) {
+        console.error(
+          `Error fetching username for userId ${video.userId}:`,
+          error
+        );
+      }
+    };
+
+    fetchProfile();
+  }, []);
   // Fetch currentUserId
   useEffect(() => {
     const fetchCurrentUserId = async () => {
@@ -150,7 +166,10 @@ const FeedItem = ({ video, onLike }: FeedItemProps) => {
 
   return (
     <View style={styles.postContainer}>
-      <Text style={styles.username}>{video.title}</Text>
+      <Text style={styles.username}>
+        {video.title} by {username}
+      </Text>
+
       <View style={styles.videoContainer}>
         <WebView
           source={{ uri: video.videoUrl }}

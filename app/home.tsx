@@ -60,9 +60,7 @@ const HomePage = () => {
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
       <View style={styles.header}>
-        <Text style={styles.title}>
-          {isFeedView ? "Feed" : "Friends & My Videos"}
-        </Text>
+        <Text style={styles.title}>{isFeedView ? "Feed" : "Friends Feed"}</Text>
 
         {/* Profile Picture */}
         <TouchableOpacity
@@ -98,7 +96,7 @@ const HomePage = () => {
           ]}
           onPress={() => setIsFeedView(false)}
         >
-          <Text style={styles.toggleText}>Friends & My Videos</Text>
+          <Text style={styles.toggleText}>Friends Feed</Text>
         </TouchableOpacity>
       </View>
 

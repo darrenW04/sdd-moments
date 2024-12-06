@@ -16,7 +16,7 @@ import axios from "axios";
 const EditProfile = () => {
   const router = useRouter();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-
+  const [password, setPassword] = useState("");
   const [profile, setProfile] = useState({
     avatar: "",
     name: "",
@@ -122,11 +122,18 @@ const EditProfile = () => {
         placeholderTextColor="#bbb"
         secureTextEntry
         value={profile.password}
-        onChangeText={(text) => setProfile({ ...profile, password: text })}
+        onChangeText={(text) => {
+          setPassword(text);
+          setProfile({ ...profile, password: text });
+        }}
       />
 
       {/* Save Button */}
-      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+      <TouchableOpacity
+        style={[styles.saveButton, { opacity: password === "" ? 0.5 : 1 }]}
+        onPress={handleSave}
+        disabled={password === ""}
+      >
         <Text style={styles.saveButtonText}>Save</Text>
       </TouchableOpacity>
     </View>

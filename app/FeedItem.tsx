@@ -58,6 +58,7 @@ type FeedItemProps = {
 };
 
 const FeedItem = ({ video, onLike }: FeedItemProps) => {
+  // These state variables act as observers
   const [liked, setLiked] = useState(video.liked);
   const [likes, setLikes] = useState(video.likes);
   const [comments, setComments] = useState(
@@ -70,11 +71,12 @@ const FeedItem = ({ video, onLike }: FeedItemProps) => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null); // Store current user's ID
   const [username, setUsername] = useState("");
 
+  // useEffect acts as the subject, notifying observers (state variables) of changes
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const { profile } = await fetchUserProfile(video.userId);
-        setUsername(profile.username);
+        setUsername(profile.username); // Observer pattern in action
       } catch (error) {
         console.error(
           `Error fetching username for userId ${video.userId}:`,
@@ -96,6 +98,7 @@ const FeedItem = ({ video, onLike }: FeedItemProps) => {
   }, []);
 
   // Fetch usernames for each comment userId
+  // Another observer watching for changes in comments and currentUserId
   useEffect(() => {
     const fetchCommentUsernames = async () => {
       try {
@@ -126,7 +129,7 @@ const FeedItem = ({ video, onLike }: FeedItemProps) => {
             }
           })
         );
-        setComments(updatedComments);
+        setComments(updatedComments); // Observer pattern in action
       } catch (error) {
         console.error("Error fetching usernames for comments:", error);
       }

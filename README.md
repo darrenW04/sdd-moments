@@ -42,3 +42,15 @@ You can start developing by editing the files inside the **app** directory. This
    ```bash
     node server.js
    ```
+
+## To maintain a consistent and high-quality codebase, this project adheres to the following coding standards:
+
+Formatting: We use Prettier to automatically format code. Ensure that Prettier is configured in your code editor to format on save. 
+
+Naming Conventions: Use camelCase for variable and function names, PascalCase for React components, and UPPER_SNAKE_CASE for constants. 
+
+TypeScript Standards: This project uses TypeScript for type safety.
+
+File Organization: Place React components in their respective directories within the app folder. 
+
+Linting: The project uses ESLint to enforce coding rules. 

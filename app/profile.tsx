@@ -239,9 +239,9 @@ const ProfilePage = () => {
           renderItem={({ item }) => (
             <View style={styles.videoCard}>
               <Text style={styles.videoTitle}>{item.title}</Text>
-              <Text
+              {/* <Text
                 style={{ color: "white" }}
-              >{`Views: ${item.viewCount}`}</Text>
+              >{`Views: ${item.viewCount}`}</Text> */}
               <Text style={styles.videoDescription}>
                 Description: {item.description}
               </Text>
